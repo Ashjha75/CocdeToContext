@@ -856,68 +856,38 @@
     // ============================================================================
 
     const loadFiles = async list => {
-        // Loader is already shown by inp.onchange handler
-
         try {
-            // Update loading message
             const loadingText = D.load.querySelector('p');
-            if (loadingText) loadingText.textContent = `Processing ${list.length} files...`;
+            if (loadingText) loadingText.textContent = `Loading ${list.length} files...`;
 
-            // Convert FileList to Array in small chunks to avoid blocking
-            const all = [];
-            const batchSize = 1000;
-
-            for (let i = 0; i < list.length; i += batchSize) {
-                const end = Math.min(i + batchSize, list.length);
-                for (let j = i; j < end; j++) {
-                    all.push(list[j]);
-                }
-
-                // Update progress
-                if (loadingText) {
-                    const progress = Math.round((i / list.length) * 100);
-                    loadingText.textContent = `Processing files... ${progress}%`;
-                }
-
-                // Let UI breathe
-                await new Promise(r => setTimeout(r, 0));
-            }
-
+            // Fast path: convert FileList to Array
+            const all = Array.from(list);
+            
             if (loadingText) loadingText.textContent = 'Filtering files...';
-            S.files = [];
+            await new Promise(r => setTimeout(r, 0));
 
-            // Process in chunks to avoid blocking
-            for (let i = 0; i < all.length; i += 500) {
-                const chunk = all.slice(i, i + 500);
-                chunk.forEach(f => {
-                    const path = f.webkitRelativePath;
-                    if (!ign(path)) {
-                        S.files.push({ path, name: f.name, size: f.size, file: f });
-                    }
-                });
-
-                // Update progress
-                if (loadingText) {
-                    const progress = Math.round((i / all.length) * 100);
-                    loadingText.textContent = `Filtering files... ${progress}%`;
-                }
-
-                await new Promise(r => setTimeout(r, 0)); // Let UI breathe
-            }
+            // Filter files
+            S.files = all.filter(f => !ign(f.webkitRelativePath))
+                .map(f => ({
+                    path: f.webkitRelativePath,
+                    name: f.name,
+                    size: f.size,
+                    file: f
+                }));
 
             if (S.files.length === 0) { toast('No valid files', 'warning'); load(false); return; }
             if (S.files.length > 5000) { toast(`Large directory (${S.files.length} files) - rendering first 1000`, 'warning'); }
 
             if (loadingText) loadingText.textContent = 'Building file tree...';
-            S.root = list[0].webkitRelativePath.split('/')[0];
+            S.root = S.files[0].path.split('/')[0];
 
             // Let UI update before building tree
-            await new Promise(r => setTimeout(r, 10));
+            await new Promise(r => setTimeout(r, 0));
 
             S.tree = build(S.files.slice(0, 3000)); // Limit tree size
 
             if (loadingText) loadingText.textContent = 'Rendering tree...';
-            await new Promise(r => setTimeout(r, 10));
+            await new Promise(r => setTimeout(r, 0));
 
             // Render tree
             const items = render(S.tree);
@@ -925,9 +895,6 @@
             S.rendered = items.length;
 
             stats();
-
-            // Reset loading message
-            if (loadingText) loadingText.textContent = 'Processing files...';
 
             toast(`Loaded ${S.files.length} files`, 'success');
         } catch (e) {
@@ -1166,17 +1133,14 @@
         D.sel.onclick = () => inp.click();
 
         // Optimize file input change handler
-        inp.onchange = async e => {
+        inp.onchange = e => {
             if (!e.target.files.length) return;
-
-            // Show loader IMMEDIATELY before any processing
+            
+            // Show loader IMMEDIATELY
             load(true);
-
-            // Let the loader render before starting heavy work
-            await new Promise(r => setTimeout(r, 50));
-
-            // Now load files
-            loadFiles(e.target.files);
+            
+            // Process files in next tick to let loader render
+            setTimeout(() => loadFiles(e.target.files), 0);
         };
 
         D.tree.onclick = e => {
