@@ -365,17 +365,62 @@
     };
 
     const bytes = n => { if (!n) return '0 B'; const k = 1024, s = ['B', 'KB', 'MB', 'GB'], i = ~~(Math.log(n) / Math.log(k)); return `${(n / k ** i).toFixed(1)} ${s[i]}`; };
-
     const words = n => {
-        if (n === 0) return 'zero'; if (n > 999999) return n.toLocaleString();
-        const o = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'],
-            t = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'],
-            tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'],
-            sc = ['', 'thousand', 'million'];
-        const ch = n => n < 10 ? o[n] : n < 20 ? t[n - 10] : n < 100 ? tens[~~(n / 10)] + (n % 10 ? ' ' + o[n % 10] : '') : o[~~(n / 100)] + ' hundred' + (n % 100 ? ' ' + ch(n % 100) : '');
-        let r = [], si = 0;
-        while (n > 0) { if (n % 1000) r.unshift(ch(n % 1000) + (sc[si] ? ' ' + sc[si] : '')); n = ~~(n / 1000); si++; }
-        return r.join(' ').trim();
+        if (n === 0) return 'zero';
+
+        // Handle very large numbers with abbreviations
+        if (n >= 1000000000) { // Billions
+            const billions = Math.floor(n / 1000000000);
+            const remainder = n % 1000000000;
+            const millions = Math.floor(remainder / 1000000);
+
+            if (millions > 0) {
+                return `${billions.toLocaleString()} billion ${millions.toLocaleString()} million`;
+            }
+            return `${billions.toLocaleString()} billion`;
+        }
+
+        if (n >= 1000000) { // Millions
+            const millions = Math.floor(n / 1000000);
+            const remainder = n % 1000000;
+            const thousands = Math.floor(remainder / 1000);
+
+            if (thousands > 0) {
+                return `${millions.toLocaleString()} million ${thousands.toLocaleString()} thousand`;
+            }
+            return `${millions.toLocaleString()} million`;
+        }
+
+        if (n >= 1000) { // Thousands
+            const thousands = Math.floor(n / 1000);
+            const remainder = n % 1000;
+
+            if (remainder > 0) {
+                return `${thousands.toLocaleString()} thousand ${remainder}`;
+            }
+            return `${thousands.toLocaleString()} thousand`;
+        }
+
+        // For numbers under 1000, use full word conversion
+        const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+        const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+        const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+        const convertHundreds = num => {
+            if (num === 0) return '';
+            if (num < 10) return ones[num];
+            if (num < 20) return teens[num - 10];
+            if (num < 100) {
+                const ten = Math.floor(num / 10);
+                const one = num % 10;
+                return tens[ten] + (one ? ' ' + ones[one] : '');
+            }
+            const hundred = Math.floor(num / 100);
+            const remainder = num % 100;
+            return ones[hundred] + ' hundred' + (remainder ? ' ' + convertHundreds(remainder) : '');
+        };
+
+        return convertHundreds(n);
     };
 
     const ign = p => { const pts = p.split('/'); if (pts.some(x => IGNORED.folders.has(x))) return true; const e = pts[pts.length - 1].split('.').pop().toLowerCase(); return IGNORED.exts.has(e); };
@@ -939,49 +984,117 @@
             const paths = cbs.map(c => c.dataset.path);
             const files = S.files.filter(f => paths.includes(f.path));
 
-            // Structure
+            const totalSize = files.reduce((s, f) => s + f.size, 0);
+            const isHuge = totalSize > 500 * 1024 * 1024;
+
+            if (totalSize > 100 * 1024 * 1024) {
+                toast(`⚠️ Large project (${bytes(totalSize)})`, 'warning');
+            }
+
             const struct = genStruct(S.tree);
 
-            // Read files in batches
+            if (isHuge) {
+                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">warning</span><h3 style="color:#fbbf24;margin:10px 0">Huge Project!</h3><p>Size: <strong>${bytes(totalSize)}</strong></p><p>Too large for preview. Use download.</p></div>`;
+                await genAndDL(struct, files);
+                toast('Ready for download!', 'success');
+                return;
+            }
+
+            const isLarge = totalSize > 50 * 1024 * 1024;
             const contents = [];
-            let done = 0;
+            let done = 0, failed = 0;
 
             for (let i = 0; i < files.length; i += BATCH) {
                 const batch = files.slice(i, i + BATCH);
-
                 await Promise.all(batch.map(async f => {
                     try {
                         const txt = await f.file.text();
                         contents.push({ path: f.path, content: txt });
-                    } catch (e) { console.warn('Skip', f.name, e); }
+                    } catch (e) { console.warn('Skip', f.name, e); failed++; }
                 }));
 
                 done += batch.length;
                 const pct = Math.round(done / files.length * 100);
-                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Processing: ${pct}%</p><small>${done} / ${files.length} files</small></div>`;
-
+                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Processing: ${pct}%</p><small>${done} / ${files.length} files</small>${failed > 0 ? `<small style="color:#fbbf24">${failed} skipped</small>` : ''}</div>`;
                 await new Promise(r => setTimeout(r, 0));
             }
 
-            // Build context
-            let ctx = `<folder-structure>\n${struct}</folder-structure>\n\n`;
-            contents.forEach(({ path, content }) => {
-                ctx += `<document path="${path}">\n${content}\n</document>\n\n`;
-            });
+            D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building...</p></div>';
+            await new Promise(r => setTimeout(r, 10));
+
+            const parts = [];
+            parts.push('<folder-structure>\n', struct, '</folder-structure>\n\n');
+
+            const CHUNK = 100;
+            for (let i = 0; i < contents.length; i += CHUNK) {
+                const chunk = contents.slice(i, i + CHUNK);
+                chunk.forEach(({ path, content }) => {
+                    parts.push(`<document path="${path}">\n`, content, '\n</document>\n\n');
+                });
+                const pct = Math.round(((i + chunk.length) / contents.length) * 100);
+                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building: ${pct}%</p></div>`;
+                await new Promise(r => setTimeout(r, 0));
+            }
+
+            let ctx;
+            try {
+                ctx = parts.join('');
+            } catch (e) {
+                console.error('Too large:', e);
+                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">warning</span><h3 style="color:#fbbf24;margin:10px 0">Too Large!</h3><p>Size: <strong>${bytes(parts.reduce((s, p) => s + p.length, 0))}</strong></p><p>Use download button.</p></div>`;
+                S.ctx = parts;
+                S.isArray = true;
+                toast('Ready for download!', 'success');
+                load(false);
+                return;
+            }
 
             S.ctx = ctx;
+            S.isArray = false;
 
-            // Display full content (no truncation - let browser handle scrolling)
-            D.ed.innerHTML = `<pre style="margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto">${esc(ctx)}</pre>`;
+            if (isLarge) {
+                const prev = ctx.substring(0, 50000);
+                const rem = ctx.length - 50000;
+                D.ed.innerHTML = `<div style="padding:12px;background:#1e1e1e;border-radius:4px;"><div style="background:#2d2d30;padding:8px;border-radius:4px;margin-bottom:12px;border-left:3px solid #fbbf24;"><strong style="color:#fbbf24;">⚠️ Preview</strong><br><small style="color:#888;">First ${bytes(50000)} of ${bytes(ctx.length)}</small><br><small style="color:#888;">Use download for full</small></div><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:500px;overflow:auto">${esc(prev)}</pre><div style="background:#2d2d30;padding:8px;border-radius:4px;margin-top:12px;text-align:center;"><small style="color:#888;">... ${bytes(rem)} more</small></div></div>`;
+            } else {
+                D.ed.innerHTML = `<pre style="margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto">${esc(ctx)}</pre>`;
+            }
 
-            toast('Context generated!', 'success');
+            toast(`Done! (${bytes(ctx.length)})`, 'success');
         } catch (e) {
             console.error('Gen error:', e);
-            toast('Generation failed', 'error');
-            D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">error</span><p>Failed</p></div>';
+            toast('Failed: ' + e.message, 'error');
+            D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">error</span><p>Failed</p><small style="color:#ef4444">${e.message}</small></div>`;
         } finally {
             load(false);
         }
+    };
+
+    const genAndDL = async (struct, files) => {
+        const parts = [];
+        parts.push('<folder-structure>\n', struct, '</folder-structure>\n\n');
+        let done = 0;
+        for (let i = 0; i < files.length; i += BATCH) {
+            const batch = files.slice(i, i + BATCH);
+            for (const f of batch) {
+                try {
+                    const txt = await f.file.text();
+                    parts.push(`<document path="${f.path}">\n`, txt, '\n</document>\n\n');
+                } catch (e) { console.warn('Skip', f.name, e); }
+            }
+            done += batch.length;
+            const pct = Math.round(done / files.length * 100);
+            D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">download</span><p>Preparing: ${pct}%</p><small>${done} / ${files.length}</small></div>`;
+            await new Promise(r => setTimeout(r, 0));
+        }
+        const blob = new Blob(parts, { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${S.root}-context.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">check_circle</span><p>Downloaded!</p><small>File: ${S.root}-context.txt</small><small>Size: ${bytes(blob.size)}</small></div>`;
     };
 
     const genStruct = (nodes, pfx = '') => {
@@ -1002,25 +1115,46 @@
 
     const copyClip = async () => {
         if (!S.ctx) { toast('Generate first', 'warning'); return; }
-        try { await navigator.clipboard.writeText(S.ctx); toast('Copied!', 'success'); }
-        catch (e) { toast('Copy failed', 'error'); }
+        try {
+            const text = S.isArray ? S.ctx.join('') : S.ctx;
+            if (text.length > 20 * 1024 * 1024) {
+                toast('Too large for clipboard. Use download.', 'warning');
+                return;
+            }
+            await navigator.clipboard.writeText(text);
+            toast('Copied!', 'success');
+        } catch (e) {
+            console.error('Copy error:', e);
+            toast('Copy failed: ' + e.message, 'error');
+        }
     };
 
     const dl = fmt => {
         if (!S.ctx) { toast('Generate first', 'warning'); return; }
-
-        const cont = S.ctx;
-        const mime = 'text/plain';
-
-        const blob = new Blob([cont], { type: mime });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${S.root}-context.${fmt}`;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        toast(`Downloaded ${fmt.toUpperCase()}`, 'success');
+        try {
+            if (S.isArray) {
+                const blob = new Blob(S.ctx, { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${S.root}-context.${fmt}`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast(`Downloaded (${bytes(blob.size)})`, 'success');
+                return;
+            }
+            const blob = new Blob([S.ctx], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${S.root}-context.${fmt}`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast(`Downloaded (${bytes(blob.size)})`, 'success');
+        } catch (e) {
+            console.error('Download error:', e);
+            toast('Download failed: ' + e.message, 'error');
+        }
     };
 
     // ============================================================================

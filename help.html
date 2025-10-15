@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>How to Use CodeToContext</title>
-    <!-- Font Awesome for Icons -->
+    <title>Help @CodeToContext</title>
+    <link rel="icon" type="image/x-icon" href="logo.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="logo.ico">
+    <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Re-using the main stylesheet for consistency -->
     <link rel="stylesheet" href="style.css">
@@ -12,8 +15,10 @@
     <style>
         /* Styles specific to the help page */
         body {
-            overflow-y: auto; /* Allow scrolling on this page */
+            overflow-y: auto;
+            /* Allow scrolling on this page */
         }
+
         .help-container {
             max-width: 900px;
             margin: 40px auto;
@@ -22,9 +27,10 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
         }
-        
+
         /* Glowing header animation */
-        h1, h2 {
+        h1,
+        h2 {
             color: var(--color-primary);
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
@@ -32,38 +38,52 @@
             animation: headerGlow 2s ease-in-out infinite;
             text-shadow: 0 0 10px rgba(52, 168, 83, 0.5);
         }
-        
+
         @keyframes headerGlow {
-            0%, 100% {
-                text-shadow: 
+
+            0%,
+            100% {
+                text-shadow:
                     0 0 5px rgba(142, 236, 167, 0.3),
                     0 0 10px rgba(52, 168, 83, 0.3),
                     0 0 15px rgba(24, 121, 50, 0.3);
             }
+
             50% {
-                text-shadow: 
+                text-shadow:
                     0 0 10px rgba(52, 168, 83, 0.8),
                     0 0 20px rgba(52, 168, 83, 0.8),
                     0 0 30px rgba(52, 168, 83, 0.6),
                     0 0 40px rgba(52, 168, 83, 0.4);
             }
         }
-        
-        h1 { font-size: 2.5rem; }
-        h2 { font-size: 1.8rem; margin-top: 40px; }
-        p, li {
+
+        h1 {
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 40px;
+        }
+
+        p,
+        li {
             color: var(--text-primary);
             line-height: 1.7;
             font-size: 1.1rem;
         }
-        ul, ol {
+
+        ul,
+        ol {
             padding-left: 20px;
             margin-bottom: 20px;
         }
+
         strong {
             color: var(--color-accent);
         }
-    
+
         /* Visual Guide Styles */
         .visual-guide {
             position: relative;
@@ -74,7 +94,9 @@
             border-radius: 8px;
             margin-top: 30px;
         }
-        .mock-sidebar, .mock-editor {
+
+        .mock-sidebar,
+        .mock-editor {
             background: var(--bg-sidebar);
             border: 1px solid var(--border-color);
             padding: 10px;
@@ -84,10 +106,20 @@
             white-space: pre;
             color: var(--text-secondary);
         }
-        .mock-sidebar { flex: 0 0 40%; }
-        .mock-editor { flex: 1; }
-        .mock-sidebar .highlight { color: var(--color-accent); font-weight: bold; }
-        
+
+        .mock-sidebar {
+            flex: 0 0 40%;
+        }
+
+        .mock-editor {
+            flex: 1;
+        }
+
+        .mock-sidebar .highlight {
+            color: var(--color-accent);
+            font-weight: bold;
+        }
+
         .annotation {
             position: absolute;
             background: #2a6a3d;
@@ -98,6 +130,7 @@
             font-weight: bold;
             border: 1px solid #77d48c;
         }
+
         .annotation::after {
             content: '';
             position: absolute;
@@ -105,19 +138,47 @@
             height: 2px;
             background: #77d48c;
         }
-    
-        #anno-tree { top: 30px; left: -100px; }
-        #anno-tree::after { top: 50%; right: -40px; }
-    
-        #anno-tokens { bottom: 4.7rem; left: -120px; }
-        #anno-tokens::after { top: 50%; right: -40px; }
-    
-        #anno-structure { top: 30px; right: -150px; }
-        #anno-structure::after { top: 50%; left: -40px; }
-        
-        #anno-output { bottom: 80px; right: -130px; }
-        #anno-output::after { top: 50%; left: -40px; }
-    
+
+        #anno-tree {
+            top: 30px;
+            left: -100px;
+        }
+
+        #anno-tree::after {
+            top: 50%;
+            right: -40px;
+        }
+
+        #anno-tokens {
+            bottom: 4.7rem;
+            left: -120px;
+        }
+
+        #anno-tokens::after {
+            top: 50%;
+            right: -40px;
+        }
+
+        #anno-structure {
+            top: 30px;
+            right: -150px;
+        }
+
+        #anno-structure::after {
+            top: 50%;
+            left: -40px;
+        }
+
+        #anno-output {
+            bottom: 80px;
+            right: -130px;
+        }
+
+        #anno-output::after {
+            top: 50%;
+            left: -40px;
+        }
+
         .back-button {
             display: inline-block;
             margin-top: 40px;
@@ -129,49 +190,56 @@
             border-radius: 5px;
             transition: var(--transition);
         }
+
         .back-button:hover {
             background: var(--color-accent-dark);
             transform: translateY(-2px);
         }
-        
+
         @media (max-width: 1200px) {
-            .annotation { display: none; } /* Hide annotations on smaller screens for clarity */
+            .annotation {
+                display: none;
+            }
+
+            /* Hide annotations on smaller screens for clarity */
         }
     </style>
 </head>
+
 <body>
 
     <div class="help-container">
-        <h1>How to Use CodeToContext</h1>
-        <p>This guide explains how to use the tool to convert your local codebase into a single, structured, and AI-ready prompt.</p>
+        <h1>CodeToContext Docs</h1>
+        <p>This guide explains how to use the tool to convert your local codebase into a single, structured, and
+            AI-ready prompt.</p>
 
         <!-- Visual Guide -->
         <div class="visual-guide">
             <div class="mock-sidebar">
-<i class="fas fa-folder"></i> my-project
-  <i class="fas fa-file-alt"></i> .gitignore
-  <i class="fas fa-file-alt"></i> package.json
-  <i class="fas fa-folder"></i> src
-    <i class="fas fa-file-alt"></i> index.html
-    <i class="fas fa-file-alt"></i> style.css
-    <i class="fas fa-file-alt"></i> script.js
+                <i class="fas fa-folder"></i> my-project
+                <i class="fas fa-file-alt"></i> .gitignore
+                <i class="fas fa-file-alt"></i> package.json
+                <i class="fas fa-folder"></i> src
+                <i class="fas fa-file-alt"></i> index.html
+                <i class="fas fa-file-alt"></i> style.css
+                <i class="fas fa-file-alt"></i> script.js
 
-<span class="highlight " >Selected: 3 | Tokens: 5,897</span>
+                <span class="highlight ">Selected: 3 | Tokens: 5,897</span>
             </div>
             <div class="mock-editor">
-&lt;folder-structure&gt;
-└── my-project
-    ├── .gitignore
-    ├── package.json
-    └── src
-        ├── index.html
-        ├── style.css
-        └── script.js
-&lt;/folder-structure&gt;
+                &lt;folder-structure&gt;
+                └── my-project
+                ├── .gitignore
+                ├── package.json
+                └── src
+                ├── index.html
+                ├── style.css
+                └── script.js
+                &lt;/folder-structure&gt;
 
-&lt;document path="my-project/src/script.js"&gt;
-// JavaScript content here...
-&lt;/document&gt;
+                &lt;document path="my-project/src/script.js"&gt;
+                // JavaScript content here...
+                &lt;/document&gt;
             </div>
 
             <div class="annotation" id="anno-tree">Interactive File Tree</div>
@@ -182,19 +250,27 @@
 
         <h2>Features</h2>
         <ul>
-            <li><strong>Structure-Aware Output:</strong> Generates a clean `<folder-structure>` diagram so the AI understands your project's layout before reading the code.</li>
-            <li><strong>100% Private:</strong> All files are processed locally in your browser. Your code never touches a server.</li>
-            <li><strong>Interactive File Tree:</strong> Easily expand, collapse, and select the exact files and folders you need.</li>
-            <li><strong>Smart File Filtering:</strong> Automatically respects common ignore patterns (like <code>.git</code> and <code>node_modules</code>), saving you time.</li>
-            <li><strong>Instant Token Analysis:</strong> Provides a real-time token count and a human-readable pronunciation to help you manage context window limits.</li>
+            <li><strong>Structure-Aware Output:</strong> Generates a clean `<folder-structure>` diagram so the AI
+                    understands your project's layout before reading the code.</li>
+            <li><strong>100% Private:</strong> All files are processed locally in your browser. Your code never touches
+                a server.</li>
+            <li><strong>Interactive File Tree:</strong> Easily expand, collapse, and select the exact files and folders
+                you need.</li>
+            <li><strong>Smart File Filtering:</strong> Automatically respects common ignore patterns (like
+                <code>.git</code> and <code>node_modules</code>), saving you time.</li>
+            <li><strong>Instant Token Analysis:</strong> Provides a real-time token count and a human-readable
+                pronunciation to help you manage context window limits.</li>
         </ul>
 
         <h2>How to Use</h2>
         <ol>
             <li><strong>Open the App:</strong> The application is ready to use as soon as the page loads.</li>
-            <li><strong>Select Your Folder:</strong> Click the <strong>"Select Directory"</strong> button to choose the project folder you want to analyze.</li>
-            <li><strong>Refine Your Selection:</strong> Use the checkboxes in the sidebar to include or exclude specific files and directories from your prompt.</li>
-            <li><strong>Copy or Download:</strong> Use the action buttons in the top-right of the editor to copy the complete prompt to your clipboard or download the generated file.</li>
+            <li><strong>Select Your Folder:</strong> Click the <strong>"Select Directory"</strong> button to choose the
+                project folder you want to analyze.</li>
+            <li><strong>Refine Your Selection:</strong> Use the checkboxes in the sidebar to include or exclude specific
+                files and directories from your prompt.</li>
+            <li><strong>Copy or Download:</strong> Use the action buttons in the top-right of the editor to copy the
+                complete prompt to your clipboard or download the generated file.</li>
         </ol>
 
         <a href="./index.html" class="back-button">
@@ -203,4 +279,5 @@
     </div>
 
 </body>
+
 </html>
