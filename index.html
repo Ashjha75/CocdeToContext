@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeToContext - Codebase to Prompt Converter</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="logo.ico">
     <link rel="shortcut icon" type="image/x-icon" href="logo.ico">
     <link rel="apple-touch-icon" href="logo.png">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="app-container">
         <!-- HEADER -->
@@ -27,11 +30,18 @@
                     <span>CodeToContext</span>
                 </div>
             </div>
-          <div class="header-right">
-    <a href="https://github.com/Ashjha75/CocdeToContext" target="_blank" class="btn-icon" title="GitHub">
-        <i class="fa-brands fa-github"></i>
-    </a>
-</div>
+            <div class="header-right">
+                <div class="sidebar-select">
+                    <button class="btn-generate" id="docsbutton" onclick="window.location.href='help.html'">
+                        <span class="material-symbols-outlined">description</span>
+                        Docs
+                    </button>
+                </div>
+
+                <a href="https://github.com/Ashjha75/CocdeToContext" target="_blank" class="btn-icon" title="GitHub">
+                    <i class="fa-brands fa-github"></i>
+                </a>
+            </div>
 
         </header>
 
@@ -167,4 +177,5 @@
 
     <script src="index.js"></script>
 </body>
+
 </html>
