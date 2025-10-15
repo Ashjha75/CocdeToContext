@@ -9,11 +9,116 @@
     // ============================================================================
     // CONFIG
     // ============================================================================
-
     const IGNORED = {
-        folders: new Set(['node_modules', '.git', '__pycache__', '.vscode', '.idea', 'dist', 'build', 'target', '.next', '.nuxt', 'coverage', 'vendor']),
-        exts: new Set(['exe', 'dll', 'so', 'class', 'pyc', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'mp4', 'mp3', 'wav', 'zip', 'tar', 'gz', 'rar'])
+        folders: new Set([
+            // Node.js
+            'node_modules',
+            '.npm',
+            '.yarn',
+            'bower_components',
+
+            // Version Control
+            '.git',
+            '.svn',
+            '.hg',
+
+            // Python
+            '__pycache__',
+            '.pytest_cache',
+            '.mypy_cache',
+            '.tox',
+            'venv',
+            'env',
+            '.env',
+            '.venv',
+            'virtualenv',
+            '.python-version',
+            'dist',
+            'build',
+            '*.egg-info',
+            '.eggs',
+
+            // Java/Spring Boot/Maven/Gradle
+            'target',
+            'build',
+            'out',
+            'bin',
+            '.gradle',
+            '.mvn',
+            '.m2',
+            'classes',
+            'generated',
+            'generated-sources',
+            'generated-test-sources',
+
+            // IDE Files
+            '.vscode',
+            '.idea',
+            '.eclipse',
+            '.settings',
+            '.classpath',
+            '.project',
+            '.factorypath',
+            '.apt_generated',
+            '.apt_generated_tests',
+            'nbproject',
+            '.nb-gradle',
+
+            // JavaScript/TypeScript
+            '.next',
+            '.nuxt',
+            '.output',
+            '.cache',
+            '.parcel-cache',
+            '.turbo',
+            'dist',
+            'coverage',
+            '.nyc_output',
+
+            // PHP
+            'vendor',
+
+            // Logs & Temp
+            'logs',
+            'temp',
+            'tmp',
+            '.log',
+
+            // OS
+            '.DS_Store',
+            'Thumbs.db'
+        ]),
+
+        exts: new Set([
+            // Executables & Binaries
+            'exe', 'dll', 'so', 'dylib', 'a', 'o', 'obj',
+
+            // Java Compiled (we'll handle .class specially for icons)
+            'class', // REMOVED - we want to show .class files with special icons
+
+            // Python Compiled
+            'pyc', 'pyo', 'pyd',
+
+            // Images (optional - you can show them)
+            // 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'webp',
+
+            // Media
+            'mp4', 'mp3', 'wav', 'avi', 'mov', 'flv', 'wmv', 'ogg',
+
+            // Archives
+            'zip', 'tar', 'gz', 'rar', '7z', 'bz2', 'xz', 'tgz',
+
+            // Fonts
+            'ttf', 'woff', 'woff2', 'eot', 'otf',
+
+            // Lock files (optional)
+            // 'lock', // If you want to hide lock files
+
+            // Other
+            'log', 'cache', 'swp', 'swo', 'bak', 'tmp'
+        ])
     };
+
 
     // VS Code Material Icon Theme - Professional file icons
     const ICONS = {
@@ -21,15 +126,20 @@
         js: { icon: 'javascript.svg', color: '#f1e05a' },
         jsx: { icon: 'react.svg', color: '#61dafb' },
         mjs: { icon: 'javascript.svg', color: '#f1e05a' },
-        
+        cjs: { icon: 'javascript.svg', color: '#f1e05a' },
+
         // TypeScript
         ts: { icon: 'typescript.svg', color: '#3178c6' },
         tsx: { icon: 'react_ts.svg', color: '#3178c6' },
-        
+
         // Python
         py: { icon: 'python.svg', color: '#3776ab' },
         pyc: { icon: 'python-misc.svg', color: '#3776ab' },
-        
+        pyi: { icon: 'python.svg', color: '#3776ab' },
+        pyx: { icon: 'python.svg', color: '#3776ab' },
+        pyd: { icon: 'python-misc.svg', color: '#3776ab' },
+        pyw: { icon: 'python.svg', color: '#3776ab' },
+
         // Web
         html: { icon: 'html.svg', color: '#e34c26' },
         htm: { icon: 'html.svg', color: '#e34c26' },
@@ -37,55 +147,70 @@
         scss: { icon: 'sass.svg', color: '#c6538c' },
         sass: { icon: 'sass.svg', color: '#c6538c' },
         less: { icon: 'less.svg', color: '#1d365d' },
-        
+
         // Data
         json: { icon: 'json.svg', color: '#cbcb41' },
         xml: { icon: 'xml.svg', color: '#ff6600' },
         yaml: { icon: 'yaml.svg', color: '#cb171e' },
         yml: { icon: 'yaml.svg', color: '#cb171e' },
         toml: { icon: 'toml.svg', color: '#9c4221' },
-        
+
         // Documentation
         md: { icon: 'markdown.svg', color: '#083fa1' },
         mdx: { icon: 'mdx.svg', color: '#fcb32c' },
         txt: { icon: 'document.svg', color: '#a0a0a0' },
-        
+
         // Config
         gitignore: { icon: 'git.svg', color: '#f34f29' },
         env: { icon: 'tune.svg', color: '#e7c547' },
         config: { icon: 'settings.svg', color: '#6d8086' },
-        
-        // Java
+
+        // Java/Spring Boot
         java: { icon: 'java.svg', color: '#b07219' },
-        class: { icon: 'javaclass.svg', color: '#b07219' },
+        class: { icon: 'javaclass.svg', color: '#b07219' }, // Compiled Java
         jar: { icon: 'jar.svg', color: '#b07219' },
-        
+        war: { icon: 'jar.svg', color: '#b07219' },
+        ear: { icon: 'jar.svg', color: '#b07219' },
+        gradle: { icon: 'gradle.svg', color: '#02303a' },
+        kt: { icon: 'kotlin.svg', color: '#7f52ff' }, // Kotlin
+        kts: { icon: 'kotlin.svg', color: '#7f52ff' },
+
+        // Maven/Gradle files (special handling below)
+        properties: { icon: 'settings.svg', color: '#6d8086' },
+
         // C/C++
         c: { icon: 'c.svg', color: '#555555' },
         cpp: { icon: 'cpp.svg', color: '#f34b7d' },
         h: { icon: 'h.svg', color: '#555555' },
         hpp: { icon: 'hpp.svg', color: '#f34b7d' },
-        
+        cc: { icon: 'cpp.svg', color: '#f34b7d' },
+        cxx: { icon: 'cpp.svg', color: '#f34b7d' },
+
+        // C#
+        cs: { icon: 'csharp.svg', color: '#178600' },
+        csproj: { icon: 'csharp.svg', color: '#178600' },
+
         // PHP
         php: { icon: 'php.svg', color: '#4f5d95' },
-        
+
         // Ruby
         rb: { icon: 'ruby.svg', color: '#701516' },
-        
+
         // Go
         go: { icon: 'go.svg', color: '#00add8' },
-        
+
         // Rust
         rs: { icon: 'rust.svg', color: '#dea584' },
-        
+
         // Shell
         sh: { icon: 'shell.svg', color: '#89e051' },
         bash: { icon: 'shell.svg', color: '#89e051' },
         zsh: { icon: 'shell.svg', color: '#89e051' },
-        
+        fish: { icon: 'shell.svg', color: '#89e051' },
+
         // Docker
         dockerfile: { icon: 'docker.svg', color: '#0db7ed' },
-        
+
         // Images
         png: { icon: 'image.svg', color: '#a074c4' },
         jpg: { icon: 'image.svg', color: '#a074c4' },
@@ -94,44 +219,108 @@
         svg: { icon: 'svg.svg', color: '#ffb13b' },
         ico: { icon: 'image.svg', color: '#a074c4' },
         webp: { icon: 'image.svg', color: '#a074c4' },
-        
+
         // Vue/Angular/React
         vue: { icon: 'vue.svg', color: '#42b883' },
-        
+
+        // Lock files
+        lock: { icon: 'lock.svg', color: '#a0a0a0' },
+
         // Others
         sql: { icon: 'database.svg', color: '#e38c00' },
         pdf: { icon: 'pdf.svg', color: '#f40f02' },
         zip: { icon: 'zip.svg', color: '#f9dc5c' },
-        
+
         // Default
         default: { icon: 'document.svg', color: '#a0a0a0' }
     };
 
     // Special folder types
     const FOLDER_ICONS = {
+        // Node.js
         'node_modules': { icon: 'folder-node.svg', color: '#8cc84b' },
+
+        // Source folders
         'src': { icon: 'folder-src.svg', color: '#f0eee6' },
+        'source': { icon: 'folder-src.svg', color: '#f0eee6' },
+        'sources': { icon: 'folder-src.svg', color: '#f0eee6' },
+
+        // Build/Output folders
         'dist': { icon: 'folder-dist.svg', color: '#f0eee6' },
         'build': { icon: 'folder-build.svg', color: '#f0eee6' },
+        'out': { icon: 'folder-dist.svg', color: '#f0eee6' },
+        'target': { icon: 'folder-dist.svg', color: '#f0eee6' }, // Maven target
+
+        // Public/Static
         'public': { icon: 'folder-public.svg', color: '#f0eee6' },
+        'static': { icon: 'folder-public.svg', color: '#f0eee6' },
         'assets': { icon: 'folder-images.svg', color: '#f0eee6' },
+        'resources': { icon: 'folder-resource.svg', color: '#f0eee6' },
+
+        // Images
         'images': { icon: 'folder-images.svg', color: '#f0eee6' },
         'img': { icon: 'folder-images.svg', color: '#f0eee6' },
+        'imgs': { icon: 'folder-images.svg', color: '#f0eee6' },
+
+        // Components
         'components': { icon: 'folder-component.svg', color: '#f0eee6' },
+        'widgets': { icon: 'folder-component.svg', color: '#f0eee6' },
+
+        // Views/Pages
         'pages': { icon: 'folder-views.svg', color: '#f0eee6' },
         'views': { icon: 'folder-views.svg', color: '#f0eee6' },
+        'screens': { icon: 'folder-views.svg', color: '#f0eee6' },
+        'templates': { icon: 'folder-views.svg', color: '#f0eee6' },
+
+        // Tests
         'tests': { icon: 'folder-test.svg', color: '#f0eee6' },
         'test': { icon: 'folder-test.svg', color: '#f0eee6' },
         '__tests__': { icon: 'folder-test.svg', color: '#f0eee6' },
+        'spec': { icon: 'folder-test.svg', color: '#f0eee6' },
+
+        // Utils/Helpers
         'utils': { icon: 'folder-helper.svg', color: '#f0eee6' },
         'helpers': { icon: 'folder-helper.svg', color: '#f0eee6' },
         'lib': { icon: 'folder-lib.svg', color: '#f0eee6' },
+        'libs': { icon: 'folder-lib.svg', color: '#f0eee6' },
+        'libraries': { icon: 'folder-lib.svg', color: '#f0eee6' },
+
+        // Config
         'config': { icon: 'folder-config.svg', color: '#f0eee6' },
+        'configs': { icon: 'folder-config.svg', color: '#f0eee6' },
+        'configuration': { icon: 'folder-config.svg', color: '#f0eee6' },
+
+        // Java/Spring specific
+        'main': { icon: 'folder-src.svg', color: '#f0eee6' },
+        'java': { icon: 'folder-src.svg', color: '#dcb67a' },
+        'kotlin': { icon: 'folder-src.svg', color: '#7f52ff' },
+        'controller': { icon: 'folder-controller.svg', color: '#f0eee6' },
+        'controllers': { icon: 'folder-controller.svg', color: '#f0eee6' },
+        'service': { icon: 'folder-helper.svg', color: '#f0eee6' },
+        'services': { icon: 'folder-helper.svg', color: '#f0eee6' },
+        'repository': { icon: 'folder-database.svg', color: '#f0eee6' },
+        'repositories': { icon: 'folder-database.svg', color: '#f0eee6' },
+        'entity': { icon: 'folder-database.svg', color: '#f0eee6' },
+        'entities': { icon: 'folder-database.svg', color: '#f0eee6' },
+        'model': { icon: 'folder-model.svg', color: '#f0eee6' },
+        'models': { icon: 'folder-model.svg', color: '#f0eee6' },
+        'dto': { icon: 'folder-interface.svg', color: '#f0eee6' },
+        'dao': { icon: 'folder-database.svg', color: '#f0eee6' },
+
+        // Python specific
+        'venv': { icon: 'folder-python.svg', color: '#3776ab' },
+        'env': { icon: 'folder-python.svg', color: '#3776ab' },
+        '__pycache__': { icon: 'folder-python.svg', color: '#3776ab' },
+
+        // IDE
         '.git': { icon: 'folder-git.svg', color: '#f34f29' },
+        '.github': { icon: 'folder-github.svg', color: '#6e5494' },
         '.vscode': { icon: 'folder-vscode.svg', color: '#007acc' },
+        '.idea': { icon: 'folder-intellij.svg', color: '#087cfa' },
+
+        // Default
         'default': { icon: 'folder.svg', color: '#dcb67a' }
     };
-
     const ICON_BASE_URL = 'https://raw.githack.com/PKief/vscode-material-icon-theme/main/icons/';
 
     const MAX_RENDER = 1000; // Max items to render at once
@@ -204,38 +393,100 @@
                 cls: 'folder-icon'
             };
         }
-        
+
         // File icon
         const fileName = name.toLowerCase();
-        
-        // Check for special filenames (like .gitignore, dockerfile, etc.)
-        if (fileName === '.gitignore' || fileName === '.gitattributes') {
+
+        // ========================================
+        // SPRING BOOT / JAVA SPECIAL FILES
+        // ========================================
+        if (fileName === 'pom.xml') {
             return {
                 type: 'svg',
-                url: ICON_BASE_URL + 'git.svg',
-                color: '#f34f29',
-                cls: 'git-icon'
-            };
-        }
-        
-        if (fileName === 'dockerfile' || fileName.startsWith('dockerfile.')) {
-            return {
-                type: 'svg',
-                url: ICON_BASE_URL + 'docker.svg',
-                color: '#0db7ed',
-                cls: 'docker-icon'
-            };
-        }
-        
-        if (fileName.startsWith('.env')) {
-            return {
-                type: 'svg',
-                url: ICON_BASE_URL + 'tune.svg',
-                color: '#e7c547',
-                cls: 'env-icon'
+                url: ICON_BASE_URL + 'maven.svg',
+                color: '#c71a36',
+                cls: 'maven-icon'
             };
         }
 
+        if (fileName === 'build.gradle' || fileName === 'build.gradle.kts' || fileName === 'settings.gradle' || fileName === 'settings.gradle.kts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'gradle.svg',
+                color: '#02303a',
+                cls: 'gradle-icon'
+            };
+        }
+
+        if (fileName === 'application.properties' || fileName === 'application.yml' || fileName === 'application.yaml') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'spring.svg',
+                color: '#6db33f',
+                cls: 'spring-icon'
+            };
+        }
+
+        if (fileName.startsWith('application-') && (fileName.endsWith('.properties') || fileName.endsWith('.yml') || fileName.endsWith('.yaml'))) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'spring.svg',
+                color: '#6db33f',
+                cls: 'spring-icon'
+            };
+        }
+
+        // ========================================
+        // PYTHON SPECIAL FILES
+        // ========================================
+        if (fileName === 'requirements.txt' || fileName === 'requirements-dev.txt') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+
+        if (fileName === 'setup.py' || fileName === 'setup.cfg') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+
+        if (fileName === 'pipfile' || fileName === 'pipfile.lock') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+
+        if (fileName === 'pyproject.toml') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+
+        if (fileName === 'manage.py') { // Django
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'django.svg',
+                color: '#092e20',
+                cls: 'django-icon'
+            };
+        }
+
+        // ========================================
+        // JAVASCRIPT/NODE SPECIAL FILES
+        // ========================================
         if (fileName === 'package.json') {
             return {
                 type: 'svg',
@@ -245,7 +496,109 @@
             };
         }
 
-        if (fileName === 'readme.md' || fileName === 'readme') {
+        if (fileName === 'package-lock.json') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'npm.svg',
+                color: '#cb3837',
+                cls: 'npm-icon'
+            };
+        }
+
+        if (fileName === 'yarn.lock') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'yarn.svg',
+                color: '#2c8ebb',
+                cls: 'yarn-icon'
+            };
+        }
+
+        if (fileName === 'tsconfig.json') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'typescript-def.svg',
+                color: '#3178c6',
+                cls: 'typescript-icon'
+            };
+        }
+
+        if (fileName === 'webpack.config.js' || fileName === 'webpack.config.ts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'webpack.svg',
+                color: '#8dd6f9',
+                cls: 'webpack-icon'
+            };
+        }
+
+        if (fileName === 'vite.config.js' || fileName === 'vite.config.ts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'vite.svg',
+                color: '#646cff',
+                cls: 'vite-icon'
+            };
+        }
+
+        if (fileName === 'next.config.js' || fileName === 'next.config.ts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'next.svg',
+                color: '#000000',
+                cls: 'next-icon'
+            };
+        }
+
+        // ========================================
+        // GIT FILES
+        // ========================================
+        if (fileName === '.gitignore' || fileName === '.gitattributes' || fileName === '.gitmodules') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'git.svg',
+                color: '#f34f29',
+                cls: 'git-icon'
+            };
+        }
+
+        // ========================================
+        // DOCKER FILES
+        // ========================================
+        if (fileName === 'dockerfile' || fileName.startsWith('dockerfile.')) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'docker.svg',
+                color: '#0db7ed',
+                cls: 'docker-icon'
+            };
+        }
+
+        if (fileName === 'docker-compose.yml' || fileName === 'docker-compose.yaml') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'docker.svg',
+                color: '#0db7ed',
+                cls: 'docker-icon'
+            };
+        }
+
+        // ========================================
+        // ENV FILES
+        // ========================================
+        if (fileName.startsWith('.env')) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'tune.svg',
+                color: '#e7c547',
+                cls: 'env-icon'
+            };
+        }
+
+        // ========================================
+        // README FILES
+        // ========================================
+        if (fileName === 'readme.md' || fileName === 'readme' || fileName === 'readme.txt') {
             return {
                 type: 'svg',
                 url: ICON_BASE_URL + 'readme.svg',
@@ -253,11 +606,25 @@
                 cls: 'readme-icon'
             };
         }
-        
-        // Get by extension
+
+        // ========================================
+        // LICENSE FILES
+        // ========================================
+        if (fileName === 'license' || fileName === 'license.md' || fileName === 'license.txt') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'license.svg',
+                color: '#cbcb41',
+                cls: 'license-icon'
+            };
+        }
+
+        // ========================================
+        // GET BY EXTENSION (DEFAULT)
+        // ========================================
         const ext = name.split('.').pop().toLowerCase();
         const iconData = ICONS[ext] || ICONS['default'];
-        
+
         return {
             type: 'svg',
             url: ICON_BASE_URL + iconData.icon,
@@ -445,32 +812,32 @@
 
     const loadFiles = async list => {
         // Loader is already shown by inp.onchange handler
-        
+
         try {
             // Update loading message
             const loadingText = D.load.querySelector('p');
             if (loadingText) loadingText.textContent = `Processing ${list.length} files...`;
-            
+
             // Convert FileList to Array in small chunks to avoid blocking
             const all = [];
             const batchSize = 1000;
-            
+
             for (let i = 0; i < list.length; i += batchSize) {
                 const end = Math.min(i + batchSize, list.length);
                 for (let j = i; j < end; j++) {
                     all.push(list[j]);
                 }
-                
+
                 // Update progress
                 if (loadingText) {
                     const progress = Math.round((i / list.length) * 100);
                     loadingText.textContent = `Processing files... ${progress}%`;
                 }
-                
+
                 // Let UI breathe
                 await new Promise(r => setTimeout(r, 0));
             }
-            
+
             if (loadingText) loadingText.textContent = 'Filtering files...';
             S.files = [];
 
@@ -483,13 +850,13 @@
                         S.files.push({ path, name: f.name, size: f.size, file: f });
                     }
                 });
-                
+
                 // Update progress
                 if (loadingText) {
                     const progress = Math.round((i / all.length) * 100);
                     loadingText.textContent = `Filtering files... ${progress}%`;
                 }
-                
+
                 await new Promise(r => setTimeout(r, 0)); // Let UI breathe
             }
 
@@ -498,25 +865,25 @@
 
             if (loadingText) loadingText.textContent = 'Building file tree...';
             S.root = list[0].webkitRelativePath.split('/')[0];
-            
+
             // Let UI update before building tree
             await new Promise(r => setTimeout(r, 10));
-            
+
             S.tree = build(S.files.slice(0, 3000)); // Limit tree size
 
             if (loadingText) loadingText.textContent = 'Rendering tree...';
             await new Promise(r => setTimeout(r, 10));
-            
+
             // Render tree
             const items = render(S.tree);
             D.tree.innerHTML = items.map(x => x.html).join('');
             S.rendered = items.length;
 
             stats();
-            
+
             // Reset loading message
             if (loadingText) loadingText.textContent = 'Processing files...';
-            
+
             toast(`Loaded ${S.files.length} files`, 'success');
         } catch (e) {
             console.error('Load error:', e);
@@ -648,8 +1015,8 @@
         const blob = new Blob([cont], { type: mime });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; 
-        a.download = `${S.root}-context.${fmt}`; 
+        a.href = url;
+        a.download = `${S.root}-context.${fmt}`;
         a.click();
         URL.revokeObjectURL(url);
 
@@ -663,17 +1030,17 @@
     const setup = () => {
         D.tog.onclick = () => D.side.classList.toggle('collapsed');
         D.sel.onclick = () => inp.click();
-        
+
         // Optimize file input change handler
         inp.onchange = async e => {
             if (!e.target.files.length) return;
-            
+
             // Show loader IMMEDIATELY before any processing
             load(true);
-            
+
             // Let the loader render before starting heavy work
             await new Promise(r => setTimeout(r, 50));
-            
+
             // Now load files
             loadFiles(e.target.files);
         };
