@@ -93,14 +93,11 @@
             // Executables & Binaries
             'exe', 'dll', 'so', 'dylib', 'a', 'o', 'obj',
 
-            // Java Compiled (we'll handle .class specially for icons)
-            'class', // REMOVED - we want to show .class files with special icons
+            // Java Compiled
+            'class',
 
             // Python Compiled
             'pyc', 'pyo', 'pyd',
-
-            // Images (optional - you can show them)
-            // 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'webp',
 
             // Media
             'mp4', 'mp3', 'wav', 'avi', 'mov', 'flv', 'wmv', 'ogg',
@@ -111,13 +108,30 @@
             // Fonts
             'ttf', 'woff', 'woff2', 'eot', 'otf',
 
-            // Lock files (optional)
-            // 'lock', // If you want to hide lock files
-
             // Other
             'log', 'cache', 'swp', 'swo', 'bak', 'tmp'
         ])
     };
+
+    // Binary file extensions - show in structure but don't read content
+    const BINARY_EXTS = new Set([
+        // Images
+        'png', 'jpg', 'jpeg', 'gif', 'bmp', 'ico', 'webp', 'svg', 'tiff', 'psd',
+        // Media
+        'mp4', 'mp3', 'wav', 'avi', 'mov', 'flv', 'wmv', 'ogg', 'webm', 'mkv',
+        // Documents
+        'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+        // Archives
+        'zip', 'tar', 'gz', 'rar', '7z', 'bz2', 'xz', 'tgz',
+        // Executables
+        'exe', 'dll', 'so', 'dylib', 'bin',
+        // Fonts
+        'ttf', 'woff', 'woff2', 'eot', 'otf',
+        // Database
+        'db', 'sqlite', 'sqlite3',
+        // Compiled
+        'class', 'pyc', 'o', 'obj'
+    ]);
 
 
     // VS Code Material Icon Theme - Professional file icons
@@ -330,7 +344,7 @@
     // STATE
     // ============================================================================
 
-    const S = { files: [], tree: [], root: 'project', ctx: '', busy: false, rendered: 0 };
+    const S = { files: [], tree: [], root: 'project', ctx: '', busy: false, rendered: 0, basePath: '', basePathSet: false };
 
     const $ = id => document.getElementById(id);
     const D = {
@@ -423,8 +437,29 @@
         return convertHundreds(n);
     };
 
-    const ign = p => { const pts = p.split('/'); if (pts.some(x => IGNORED.folders.has(x))) return true; const e = pts[pts.length - 1].split('.').pop().toLowerCase(); return IGNORED.exts.has(e); };
+    // Build a full path string by optionally prepending a user-supplied base path.
+    // If no base path is provided, return the relative path unchanged.
+    const getFullPath = rel => {
+        if (!rel) return rel;
+        const r = String(rel);
+        if (S.basePath) {
+            const base = S.basePath.replace(/[\\/]+$/, '');
+            const relNorm = r.replace(/^[\\/]+/, '');
+            // If base looks like a Windows path (contains backslash) join with backslashes
+            if (base.indexOf('\\') !== -1) {
+                return base + '\\' + relNorm.replace(/\//g, '\\');
+            }
+            // Default to POSIX-style join
+            return base + '/' + relNorm.replace(/\\/g, '/');
+        }
+        return r;
+    };
 
+    const ign = p => { const pts = p.split('/'); if (pts.some(x => IGNORED.folders.has(x))) return true; const e = pts[pts.length - 1].split('.').pop().toLowerCase(); return IGNORED.exts.has(e); };
+    const isBinary = filename => {
+        const ext = filename.split('.').pop().toLowerCase();
+        return BINARY_EXTS.has(ext);
+    };
     // Get icon for file or folder
     const ico = (name, isFolder) => {
         if (isFolder) {
@@ -862,7 +897,7 @@
 
             // Fast path: convert FileList to Array
             const all = Array.from(list);
-            
+
             if (loadingText) loadingText.textContent = 'Filtering files...';
             await new Promise(r => setTimeout(r, 0));
 
@@ -874,6 +909,35 @@
                     size: f.size,
                     file: f
                 }));
+
+            // Auto-detect absolute base path when running in desktop/Electron environments
+            // where File objects may expose a non-standard `path` property.
+            if (!S.basePathSet) {
+                const cand = S.files.find(ff => ff.file && ff.file.path);
+                if (cand && cand.file && cand.file.path) {
+                    try {
+                        const full = String(cand.file.path);
+                        const rel = String(cand.path);
+                        const sep = full.indexOf('\\') !== -1 ? '\\' : '/';
+                        const relConv = rel.split('/').join(sep);
+                        let base = '';
+                        if (full.endsWith(relConv)) {
+                            base = full.slice(0, full.length - relConv.length);
+                            base = base.replace(/[\\/]+$/, '');
+                        } else {
+                            const idx = full.indexOf(relConv);
+                            if (idx !== -1) base = full.slice(0, idx).replace(/[\\/]+$/, '');
+                        }
+                        if (base) {
+                            S.basePath = base;
+                            S.basePathSet = true;
+                            console.info('Auto-detected base path:', base);
+                        }
+                    } catch (e) {
+                        // ignore; leave base path unset
+                    }
+                }
+            }
 
             if (S.files.length === 0) { toast('No valid files', 'warning'); load(false); return; }
             if (S.files.length > 5000) { toast(`Large directory (${S.files.length} files) - rendering first 1000`, 'warning'); }
@@ -938,20 +1002,34 @@
     // CONTEXT GENERATION - STREAMING
     // ============================================================================
 
-    const gen = async () => {
+  const gen = async () => {
         if (S.busy) return;
 
         const cbs = Array.from(document.querySelectorAll('.file-checkbox:checked:not([disabled])'));
         if (!cbs.length) { toast('Select files first', 'warning'); return; }
 
         load(true);
-        D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Generating...</p></div>';
+        D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Preparing...</p></div>';
+
+        // Use auto-detected base path if available (set in loadFiles). If none was detected, continue using relative paths.
 
         try {
             const paths = cbs.map(c => c.dataset.path);
             const files = S.files.filter(f => paths.includes(f.path));
 
-            const totalSize = files.reduce((s, f) => s + f.size, 0);
+            // Separate binary and text files
+            const textFiles = [];
+            const binaryFiles = [];
+            
+            files.forEach(f => {
+                if (isBinary(f.name)) {
+                    binaryFiles.push(f);
+                } else {
+                    textFiles.push(f);
+                }
+            });
+
+            const totalSize = textFiles.reduce((s, f) => s + f.size, 0);
             const isHuge = totalSize > 500 * 1024 * 1024;
 
             if (totalSize > 100 * 1024 * 1024) {
@@ -962,46 +1040,66 @@
 
             if (isHuge) {
                 D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">warning</span><h3 style="color:#fbbf24;margin:10px 0">Huge Project!</h3><p>Size: <strong>${bytes(totalSize)}</strong></p><p>Too large for preview. Use download.</p></div>`;
-                await genAndDL(struct, files);
+                await genAndDL(struct, textFiles, binaryFiles);
                 toast('Ready for download!', 'success');
                 return;
             }
 
             const isLarge = totalSize > 50 * 1024 * 1024;
             const contents = [];
-            let done = 0, failed = 0;
+            let done = 0, failed = 0, skipped = binaryFiles.length;
 
-            for (let i = 0; i < files.length; i += BATCH) {
-                const batch = files.slice(i, i + BATCH);
-                await Promise.all(batch.map(async f => {
-                    try {
-                        const txt = await f.file.text();
-                        contents.push({ path: f.path, content: txt });
-                    } catch (e) { console.warn('Skip', f.name, e); failed++; }
-                }));
+            // Process text files in larger batches with better progress
+            const FAST_BATCH = 100;
+            for (let i = 0; i < textFiles.length; i += FAST_BATCH) {
+                const batch = textFiles.slice(i, i + FAST_BATCH);
+                
+                // Read all files in parallel for speed
+                const results = await Promise.allSettled(
+                    batch.map(f => f.file.text())
+                );
+                
+                results.forEach((result, idx) => {
+                    if (result.status === 'fulfilled') {
+                        contents.push({ 
+                            path: batch[idx].path, 
+                            content: result.value 
+                        });
+                    } else {
+                        console.warn('Skip', batch[idx].name, result.reason);
+                        failed++;
+                    }
+                });
 
                 done += batch.length;
-                const pct = Math.round(done / files.length * 100);
-                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Processing: ${pct}%</p><small>${done} / ${files.length} files</small>${failed > 0 ? `<small style="color:#fbbf24">${failed} skipped</small>` : ''}</div>`;
-                await new Promise(r => setTimeout(r, 0));
+                const pct = Math.round(done / textFiles.length * 100);
+                const status = [];
+                status.push(`<strong>${done}/${textFiles.length}</strong> files`);
+                if (skipped > 0) status.push(`<span style="color:#3b82f6">${skipped} binary</span>`);
+                if (failed > 0) status.push(`<span style="color:#fbbf24">${failed} failed</span>`);
+                
+                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Reading files: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
+                
+                // Yield to UI only every 5 batches for better performance
+                if (i % (FAST_BATCH * 5) === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                }
             }
 
-            D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building...</p></div>';
+            D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building output...</p></div>';
             await new Promise(r => setTimeout(r, 10));
 
             const parts = [];
             parts.push('<folder-structure>\n', struct, '</folder-structure>\n\n');
 
-            const CHUNK = 100;
-            for (let i = 0; i < contents.length; i += CHUNK) {
-                const chunk = contents.slice(i, i + CHUNK);
-                chunk.forEach(({ path, content }) => {
-                    parts.push(`<document path="${path}">\n`, content, '\n</document>\n\n');
-                });
-                const pct = Math.round(((i + chunk.length) / contents.length) * 100);
-                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building: ${pct}%</p></div>`;
-                await new Promise(r => setTimeout(r, 0));
-            }
+            // Binary files are intentionally excluded from the generated output (they remain visible in the tree)
+
+            // Build document sections faster - no UI updates during build
+            contents.forEach(({ path, content }) => {
+                const full = getFullPath(path);
+                parts.push(`=== FILE: ${full} ===\n`);
+                parts.push(`<document path="${path}">\n`, content, '\n</document>\n\n');
+            });
 
             let ctx;
             try {
@@ -1027,7 +1125,12 @@
                 D.ed.innerHTML = `<pre style="margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto">${esc(ctx)}</pre>`;
             }
 
-            toast(`Done! (${bytes(ctx.length)})`, 'success');
+            const stats = [];
+            stats.push(`${textFiles.length} files`);
+            if (binaryFiles.length > 0) stats.push(`${binaryFiles.length} binary excluded`);
+            stats.push(`${bytes(ctx.length)}`);
+            
+            toast(`✓ Done! ${stats.join(' • ')}`, 'success');
         } catch (e) {
             console.error('Gen error:', e);
             toast('Failed: ' + e.message, 'error');
@@ -1037,23 +1140,47 @@
         }
     };
 
-    const genAndDL = async (struct, files) => {
+const genAndDL = async (struct, textFiles, binaryFiles) => {
         const parts = [];
         parts.push('<folder-structure>\n', struct, '</folder-structure>\n\n');
+        
+        // Binary files are intentionally excluded from the generated download (they remain visible in the tree)
+        
         let done = 0;
-        for (let i = 0; i < files.length; i += BATCH) {
-            const batch = files.slice(i, i + BATCH);
-            for (const f of batch) {
-                try {
-                    const txt = await f.file.text();
-                    parts.push(`<document path="${f.path}">\n`, txt, '\n</document>\n\n');
-                } catch (e) { console.warn('Skip', f.name, e); }
-            }
+        const FAST_BATCH = 100;
+        
+        for (let i = 0; i < textFiles.length; i += FAST_BATCH) {
+            const batch = textFiles.slice(i, i + FAST_BATCH);
+            
+            const results = await Promise.allSettled(
+                batch.map(f => f.file.text())
+            );
+            
+            results.forEach((result, idx) => {
+                if (result.status === 'fulfilled') {
+                    const p = batch[idx].path;
+                    parts.push(`=== FILE: ${getFullPath(p)} ===\n`);
+                    parts.push(`<document path="${p}">\n`, result.value, '\n</document>\n\n');
+                } else {
+                    console.warn('Skip', batch[idx].name, result.reason);
+                }
+            });
+            
             done += batch.length;
-            const pct = Math.round(done / files.length * 100);
-            D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">download</span><p>Preparing: ${pct}%</p><small>${done} / ${files.length}</small></div>`;
-            await new Promise(r => setTimeout(r, 0));
+            const pct = Math.round(done / textFiles.length * 100);
+            const status = [];
+            status.push(`${done}/${textFiles.length}`);
+            if (binaryFiles && binaryFiles.length > 0) {
+                status.push(`${binaryFiles.length} binary`);
+            }
+            
+            D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">download</span><p>Preparing: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
+            
+            if (i % (FAST_BATCH * 5) === 0) {
+                await new Promise(r => setTimeout(r, 0));
+            }
         }
+        
         const blob = new Blob(parts, { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1061,7 +1188,15 @@
         a.download = `${S.root}-context.txt`;
         a.click();
         URL.revokeObjectURL(url);
-        D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">check_circle</span><p>Downloaded!</p><small>File: ${S.root}-context.txt</small><small>Size: ${bytes(blob.size)}</small></div>`;
+        
+        const stats = [];
+        stats.push(`${textFiles.length} files`);
+        if (binaryFiles && binaryFiles.length > 0) {
+            stats.push(`${binaryFiles.length} binary`);
+        }
+        stats.push(bytes(blob.size));
+        
+        D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">check_circle</span><p>Downloaded!</p><small>File: ${S.root}-context.txt</small><small>${stats.join(' • ')}</small></div>`;
     };
 
     const genStruct = (nodes, pfx = '') => {
@@ -1135,10 +1270,10 @@
         // Optimize file input change handler
         inp.onchange = e => {
             if (!e.target.files.length) return;
-            
+
             // Show loader IMMEDIATELY
             load(true);
-            
+
             // Process files in next tick to let loader render
             setTimeout(() => loadFiles(e.target.files), 0);
         };
