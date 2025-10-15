@@ -80,6 +80,20 @@ html, body {
     color: var(--color-primary);
 }
 
+/* Logo styling */
+.app-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.app-logo:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
 .header-title .material-symbols-outlined {
     color: var(--color-accent);
     font-size: 20px;
@@ -376,27 +390,43 @@ html, body {
 }
 
 .file-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    margin-right: 2px;
 }
 
+/* VS Code style SVG icons */
+.file-icon .vscode-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+}
+
+/* Folder icon slightly larger */
+.folder-icon .vscode-icon {
+    width: 19px;
+    height: 19px;
+    opacity: 0.9;
+}
+
+/* Smooth icon loading */
+.vscode-icon {
+    transition: opacity 0.2s ease;
+}
+
+.vscode-icon:hover {
+    opacity: 1;
+}
+
+/* Fallback for Material Icons (if needed) */
 .file-icon .material-symbols-outlined {
     font-size: 16px;
 }
-
-/* File type colors */
-.folder-icon .material-symbols-outlined { color: #e3dacc; }
-.js-icon .material-symbols-outlined { color: #f1e05a; }
-.ts-icon .material-symbols-outlined { color: #3178c6; }
-.py-icon .material-symbols-outlined { color: #3776ab; }
-.html-icon .material-symbols-outlined { color: #e34c26; }
-.css-icon .material-symbols-outlined { color: #563d7c; }
-.json-icon .material-symbols-outlined { color: #cb171e; }
-.md-icon .material-symbols-outlined { color: #ffffff; }
 
 .file-label {
     display: flex;

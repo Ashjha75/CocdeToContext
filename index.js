@@ -15,13 +15,124 @@
         exts: new Set(['exe', 'dll', 'so', 'class', 'pyc', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'mp4', 'mp3', 'wav', 'zip', 'tar', 'gz', 'rar'])
     };
 
+    // VS Code Material Icon Theme - Professional file icons
     const ICONS = {
-        js: { i: 'javascript', c: '#f1e05a' }, jsx: { i: 'javascript', c: '#f1e05a' },
-        ts: { i: 'code', c: '#3178c6' }, tsx: { i: 'code', c: '#3178c6' },
-        py: { i: 'code', c: '#3776ab' }, html: { i: 'html', c: '#e34c26' },
-        css: { i: 'css', c: '#563d7c' }, json: { i: 'data_object', c: '#cb171e' },
-        md: { i: 'article', c: '#fff' }
+        // JavaScript
+        js: { icon: 'javascript.svg', color: '#f1e05a' },
+        jsx: { icon: 'react.svg', color: '#61dafb' },
+        mjs: { icon: 'javascript.svg', color: '#f1e05a' },
+        
+        // TypeScript
+        ts: { icon: 'typescript.svg', color: '#3178c6' },
+        tsx: { icon: 'react_ts.svg', color: '#3178c6' },
+        
+        // Python
+        py: { icon: 'python.svg', color: '#3776ab' },
+        pyc: { icon: 'python-misc.svg', color: '#3776ab' },
+        
+        // Web
+        html: { icon: 'html.svg', color: '#e34c26' },
+        htm: { icon: 'html.svg', color: '#e34c26' },
+        css: { icon: 'css.svg', color: '#563d7c' },
+        scss: { icon: 'sass.svg', color: '#c6538c' },
+        sass: { icon: 'sass.svg', color: '#c6538c' },
+        less: { icon: 'less.svg', color: '#1d365d' },
+        
+        // Data
+        json: { icon: 'json.svg', color: '#cbcb41' },
+        xml: { icon: 'xml.svg', color: '#ff6600' },
+        yaml: { icon: 'yaml.svg', color: '#cb171e' },
+        yml: { icon: 'yaml.svg', color: '#cb171e' },
+        toml: { icon: 'toml.svg', color: '#9c4221' },
+        
+        // Documentation
+        md: { icon: 'markdown.svg', color: '#083fa1' },
+        mdx: { icon: 'mdx.svg', color: '#fcb32c' },
+        txt: { icon: 'document.svg', color: '#a0a0a0' },
+        
+        // Config
+        gitignore: { icon: 'git.svg', color: '#f34f29' },
+        env: { icon: 'tune.svg', color: '#e7c547' },
+        config: { icon: 'settings.svg', color: '#6d8086' },
+        
+        // Java
+        java: { icon: 'java.svg', color: '#b07219' },
+        class: { icon: 'javaclass.svg', color: '#b07219' },
+        jar: { icon: 'jar.svg', color: '#b07219' },
+        
+        // C/C++
+        c: { icon: 'c.svg', color: '#555555' },
+        cpp: { icon: 'cpp.svg', color: '#f34b7d' },
+        h: { icon: 'h.svg', color: '#555555' },
+        hpp: { icon: 'hpp.svg', color: '#f34b7d' },
+        
+        // PHP
+        php: { icon: 'php.svg', color: '#4f5d95' },
+        
+        // Ruby
+        rb: { icon: 'ruby.svg', color: '#701516' },
+        
+        // Go
+        go: { icon: 'go.svg', color: '#00add8' },
+        
+        // Rust
+        rs: { icon: 'rust.svg', color: '#dea584' },
+        
+        // Shell
+        sh: { icon: 'shell.svg', color: '#89e051' },
+        bash: { icon: 'shell.svg', color: '#89e051' },
+        zsh: { icon: 'shell.svg', color: '#89e051' },
+        
+        // Docker
+        dockerfile: { icon: 'docker.svg', color: '#0db7ed' },
+        
+        // Images
+        png: { icon: 'image.svg', color: '#a074c4' },
+        jpg: { icon: 'image.svg', color: '#a074c4' },
+        jpeg: { icon: 'image.svg', color: '#a074c4' },
+        gif: { icon: 'image.svg', color: '#a074c4' },
+        svg: { icon: 'svg.svg', color: '#ffb13b' },
+        ico: { icon: 'image.svg', color: '#a074c4' },
+        webp: { icon: 'image.svg', color: '#a074c4' },
+        
+        // Vue/Angular/React
+        vue: { icon: 'vue.svg', color: '#42b883' },
+        
+        // Others
+        sql: { icon: 'database.svg', color: '#e38c00' },
+        pdf: { icon: 'pdf.svg', color: '#f40f02' },
+        zip: { icon: 'zip.svg', color: '#f9dc5c' },
+        
+        // Default
+        default: { icon: 'document.svg', color: '#a0a0a0' }
     };
+
+    // Special folder types
+    const FOLDER_ICONS = {
+        'node_modules': { icon: 'folder-node.svg', color: '#8cc84b' },
+        'src': { icon: 'folder-src.svg', color: '#f0eee6' },
+        'dist': { icon: 'folder-dist.svg', color: '#f0eee6' },
+        'build': { icon: 'folder-build.svg', color: '#f0eee6' },
+        'public': { icon: 'folder-public.svg', color: '#f0eee6' },
+        'assets': { icon: 'folder-images.svg', color: '#f0eee6' },
+        'images': { icon: 'folder-images.svg', color: '#f0eee6' },
+        'img': { icon: 'folder-images.svg', color: '#f0eee6' },
+        'components': { icon: 'folder-component.svg', color: '#f0eee6' },
+        'pages': { icon: 'folder-views.svg', color: '#f0eee6' },
+        'views': { icon: 'folder-views.svg', color: '#f0eee6' },
+        'tests': { icon: 'folder-test.svg', color: '#f0eee6' },
+        'test': { icon: 'folder-test.svg', color: '#f0eee6' },
+        '__tests__': { icon: 'folder-test.svg', color: '#f0eee6' },
+        'utils': { icon: 'folder-helper.svg', color: '#f0eee6' },
+        'helpers': { icon: 'folder-helper.svg', color: '#f0eee6' },
+        'lib': { icon: 'folder-lib.svg', color: '#f0eee6' },
+        'config': { icon: 'folder-config.svg', color: '#f0eee6' },
+        '.git': { icon: 'folder-git.svg', color: '#f34f29' },
+        '.vscode': { icon: 'folder-vscode.svg', color: '#007acc' },
+        'default': { icon: 'folder.svg', color: '#dcb67a' }
+    };
+
+    const ICON_BASE_URL = 'https://raw.githack.com/PKief/vscode-material-icon-theme/main/icons/';
 
     const MAX_RENDER = 1000; // Max items to render at once
     const BATCH = 50; // Files to process per batch
@@ -80,7 +191,80 @@
 
     const ign = p => { const pts = p.split('/'); if (pts.some(x => IGNORED.folders.has(x))) return true; const e = pts[pts.length - 1].split('.').pop().toLowerCase(); return IGNORED.exts.has(e); };
 
-    const ico = (n, f) => { if (f) return { i: 'folder', c: '#e3dacc', cls: 'folder-icon' }; const e = n.split('.').pop().toLowerCase(); const ic = ICONS[e] || { i: 'description', c: '#888' }; return { ...ic, cls: `${e}-icon` }; };
+    // Get icon for file or folder
+    const ico = (name, isFolder) => {
+        if (isFolder) {
+            // Check for special folder names
+            const folderName = name.toLowerCase();
+            const folderIcon = FOLDER_ICONS[folderName] || FOLDER_ICONS['default'];
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + folderIcon.icon,
+                color: folderIcon.color,
+                cls: 'folder-icon'
+            };
+        }
+        
+        // File icon
+        const fileName = name.toLowerCase();
+        
+        // Check for special filenames (like .gitignore, dockerfile, etc.)
+        if (fileName === '.gitignore' || fileName === '.gitattributes') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'git.svg',
+                color: '#f34f29',
+                cls: 'git-icon'
+            };
+        }
+        
+        if (fileName === 'dockerfile' || fileName.startsWith('dockerfile.')) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'docker.svg',
+                color: '#0db7ed',
+                cls: 'docker-icon'
+            };
+        }
+        
+        if (fileName.startsWith('.env')) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'tune.svg',
+                color: '#e7c547',
+                cls: 'env-icon'
+            };
+        }
+
+        if (fileName === 'package.json') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'nodejs.svg',
+                color: '#8cc84b',
+                cls: 'nodejs-icon'
+            };
+        }
+
+        if (fileName === 'readme.md' || fileName === 'readme') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'readme.svg',
+                color: '#4caf50',
+                cls: 'readme-icon'
+            };
+        }
+        
+        // Get by extension
+        const ext = name.split('.').pop().toLowerCase();
+        const iconData = ICONS[ext] || ICONS['default'];
+        
+        return {
+            type: 'svg',
+            url: ICON_BASE_URL + iconData.icon,
+            color: iconData.color,
+            cls: `${ext}-icon`
+        };
+    };
 
     const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -237,7 +421,7 @@
                             <span class="material-symbols-outlined">chevron_right</span>
                         </button>
                         <div class="file-icon ${ic.cls}">
-                            <span class="material-symbols-outlined" style="color:${ic.c}">${ic.i}</span>
+                            <img src="${ic.url}" alt="${nd.n}" class="vscode-icon" onerror="this.style.display='none'" />
                         </div>
                         <label class="file-label">
                             <input type="checkbox" class="file-checkbox" data-path="${nd.full}" ${nd.ig ? 'disabled' : 'checked'}>
