@@ -2,7 +2,7 @@
 
 CodeToContext is a simple yet powerful tool that transforms local source code into a single, clean, and structured text prompt, ready for any Large Language Model (LLM). It runs entirely in your browser, ensuring your code remains 100% private and secure.
 
-![CodeToContext Screenshot](https://user-images.githubusercontent.com/ss.png) 
+![CodeToContext Screenshot](https://github.com/Ashjha75/CodeToContext/blob/dev_v1/ss.png) 
 <!-- You can add a screenshot of your app here later -->
 
 ## 🎯 Core Features
@@ -19,7 +19,7 @@ CodeToContext is a simple yet powerful tool that transforms local source code in
 ### Option 1: Use It Online (Recommended)
 The easiest way to use CodeToContext is through the live version hosted on GitHub Pages.
 
-**[Visit the Live Application](https://ashjha75.github.io/CocdeToContext/)** 
+**[Visit the Live Application](https://ashjha75.github.io/CodeToContext/)** 
 <!-- Update this link once you deploy -->
 
 ### Option 2: Run Locally

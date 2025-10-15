@@ -444,11 +444,34 @@
     // ============================================================================
 
     const loadFiles = async list => {
-        load(true);
-
+        // Loader is already shown by inp.onchange handler
+        
         try {
-            // Quick filter
-            const all = Array.from(list);
+            // Update loading message
+            const loadingText = D.load.querySelector('p');
+            if (loadingText) loadingText.textContent = `Processing ${list.length} files...`;
+            
+            // Convert FileList to Array in small chunks to avoid blocking
+            const all = [];
+            const batchSize = 1000;
+            
+            for (let i = 0; i < list.length; i += batchSize) {
+                const end = Math.min(i + batchSize, list.length);
+                for (let j = i; j < end; j++) {
+                    all.push(list[j]);
+                }
+                
+                // Update progress
+                if (loadingText) {
+                    const progress = Math.round((i / list.length) * 100);
+                    loadingText.textContent = `Processing files... ${progress}%`;
+                }
+                
+                // Let UI breathe
+                await new Promise(r => setTimeout(r, 0));
+            }
+            
+            if (loadingText) loadingText.textContent = 'Filtering files...';
             S.files = [];
 
             // Process in chunks to avoid blocking
@@ -460,21 +483,40 @@
                         S.files.push({ path, name: f.name, size: f.size, file: f });
                     }
                 });
+                
+                // Update progress
+                if (loadingText) {
+                    const progress = Math.round((i / all.length) * 100);
+                    loadingText.textContent = `Filtering files... ${progress}%`;
+                }
+                
                 await new Promise(r => setTimeout(r, 0)); // Let UI breathe
             }
 
             if (S.files.length === 0) { toast('No valid files', 'warning'); load(false); return; }
             if (S.files.length > 5000) { toast(`Large directory (${S.files.length} files) - rendering first 1000`, 'warning'); }
 
+            if (loadingText) loadingText.textContent = 'Building file tree...';
             S.root = list[0].webkitRelativePath.split('/')[0];
+            
+            // Let UI update before building tree
+            await new Promise(r => setTimeout(r, 10));
+            
             S.tree = build(S.files.slice(0, 3000)); // Limit tree size
 
+            if (loadingText) loadingText.textContent = 'Rendering tree...';
+            await new Promise(r => setTimeout(r, 10));
+            
             // Render tree
             const items = render(S.tree);
             D.tree.innerHTML = items.map(x => x.html).join('');
             S.rendered = items.length;
 
             stats();
+            
+            // Reset loading message
+            if (loadingText) loadingText.textContent = 'Processing files...';
+            
             toast(`Loaded ${S.files.length} files`, 'success');
         } catch (e) {
             console.error('Load error:', e);
@@ -562,11 +604,8 @@
 
             S.ctx = ctx;
 
-            // Display (truncate if huge)
-            const disp = ctx.length > 100000 ?
-                ctx.substring(0, 100000) + '\n\n... [Truncated. Use Copy/Download for full content]' : ctx;
-
-            D.ed.innerHTML = `<pre style="margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto">${esc(disp)}</pre>`;
+            // Display full content (no truncation - let browser handle scrolling)
+            D.ed.innerHTML = `<pre style="margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto">${esc(ctx)}</pre>`;
 
             toast('Context generated!', 'success');
         } catch (e) {
@@ -624,7 +663,20 @@
     const setup = () => {
         D.tog.onclick = () => D.side.classList.toggle('collapsed');
         D.sel.onclick = () => inp.click();
-        inp.onchange = e => e.target.files.length && loadFiles(e.target.files);
+        
+        // Optimize file input change handler
+        inp.onchange = async e => {
+            if (!e.target.files.length) return;
+            
+            // Show loader IMMEDIATELY before any processing
+            load(true);
+            
+            // Let the loader render before starting heavy work
+            await new Promise(r => setTimeout(r, 50));
+            
+            // Now load files
+            loadFiles(e.target.files);
+        };
 
         D.tree.onclick = e => {
             const btn = e.target.closest('.expand-btn');
