@@ -76,7 +76,7 @@ def dump_all_files_to_txt(root_folder, output_file, skip_extensions=None, skip_f
 
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
-    root_folder = r"C:\Users\Ashish jha\Desktop\PERSONAL\CodeToContext"  # 👈 Change this
+    root_folder = r"EDIT THIS PLEASE TO FOLDER PATH"  # 👈 Change this
     output_file = "project_snapshot.txt"
 
     skip_extensions = [
