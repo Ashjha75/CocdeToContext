@@ -1,11 +1,9 @@
 // ============================================================================
-// CodeToContext - EXTREME PERFORMANCE VERSION
-// Handles 10,000+ files without freezing
+// CodeToContext - EXTREME PERFORMANCE VERSION (MODIFIED AGAIN)
+// Handles 10,000+ files without freezing, better memory management
 // ============================================================================
-
 (function () {
     'use strict';
-
     // ============================================================================
     // CONFIG
     // ============================================================================
@@ -16,12 +14,10 @@
             '.npm',
             '.yarn',
             'bower_components',
-
             // Version Control
             '.git',
             '.svn',
             '.hg',
-
             // Python
             '__pycache__',
             '.pytest_cache',
@@ -37,7 +33,6 @@
             'build',
             '*.egg-info',
             '.eggs',
-
             // Java/Spring Boot/Maven/Gradle
             'target',
             'build',
@@ -50,7 +45,6 @@
             'generated',
             'generated-sources',
             'generated-test-sources',
-
             // IDE Files
             '.vscode',
             '.idea',
@@ -63,7 +57,6 @@
             '.apt_generated_tests',
             'nbproject',
             '.nb-gradle',
-
             // JavaScript/TypeScript
             '.next',
             '.nuxt',
@@ -74,45 +67,56 @@
             'dist',
             'coverage',
             '.nyc_output',
-
             // PHP
             'vendor',
-
             // Logs & Temp
             'logs',
             'temp',
             'tmp',
             '.log',
-
             // OS
             '.DS_Store',
             'Thumbs.db'
         ]),
-
         exts: new Set([
             // Executables & Binaries
             'exe', 'dll', 'so', 'dylib', 'a', 'o', 'obj',
-
             // Java Compiled
             'class',
-
             // Python Compiled
             'pyc', 'pyo', 'pyd',
-
             // Media
             'mp4', 'mp3', 'wav', 'avi', 'mov', 'flv', 'wmv', 'ogg',
-
             // Archives
             'zip', 'tar', 'gz', 'rar', '7z', 'bz2', 'xz', 'tgz',
-
             // Fonts
             'ttf', 'woff', 'woff2', 'eot', 'otf',
-
             // Other
             'log', 'cache', 'swp', 'swo', 'bak', 'tmp'
         ])
     };
-
+    // Download the bundled Python script (combine.py) and notify user to update paths
+    const downloadPythonScript = async () => {
+        try {
+            const res = await fetch('combine.py');
+            if (!res.ok) throw new Error('Failed to fetch combine.py');
+            const txt = await res.text();
+            const blob = new Blob([txt], { type: 'text/x-python' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'combine.py';
+            a.click();
+            URL.revokeObjectURL(url);
+            // Show a toast instructing the user to change the path inside the script
+            toast('combine.py downloaded — edit the script to change any file paths before running.', 'info');
+        } catch (e) {
+            console.error('Download combine.py error:', e);
+            toast('Failed to download combine.py: ' + (e.message || ''), 'error');
+        }
+    };
+    // Expose to global so inline onclick in HTML can access it
+    window.downloadPythonScript = downloadPythonScript;
     // Binary file extensions - show in structure but don't read content
     const BINARY_EXTS = new Set([
         // Images
@@ -132,8 +136,6 @@
         // Compiled
         'class', 'pyc', 'o', 'obj'
     ]);
-
-
     // VS Code Material Icon Theme - Professional file icons
     const ICONS = {
         // JavaScript
@@ -141,11 +143,9 @@
         jsx: { icon: 'react.svg', color: '#61dafb' },
         mjs: { icon: 'javascript.svg', color: '#f1e05a' },
         cjs: { icon: 'javascript.svg', color: '#f1e05a' },
-
         // TypeScript
         ts: { icon: 'typescript.svg', color: '#3178c6' },
         tsx: { icon: 'react_ts.svg', color: '#3178c6' },
-
         // Python
         py: { icon: 'python.svg', color: '#3776ab' },
         pyc: { icon: 'python-misc.svg', color: '#3776ab' },
@@ -153,7 +153,6 @@
         pyx: { icon: 'python.svg', color: '#3776ab' },
         pyd: { icon: 'python-misc.svg', color: '#3776ab' },
         pyw: { icon: 'python.svg', color: '#3776ab' },
-
         // Web
         html: { icon: 'html.svg', color: '#e34c26' },
         htm: { icon: 'html.svg', color: '#e34c26' },
@@ -161,24 +160,20 @@
         scss: { icon: 'sass.svg', color: '#c6538c' },
         sass: { icon: 'sass.svg', color: '#c6538c' },
         less: { icon: 'less.svg', color: '#1d365d' },
-
         // Data
         json: { icon: 'json.svg', color: '#cbcb41' },
         xml: { icon: 'xml.svg', color: '#ff6600' },
         yaml: { icon: 'yaml.svg', color: '#cb171e' },
         yml: { icon: 'yaml.svg', color: '#cb171e' },
         toml: { icon: 'toml.svg', color: '#9c4221' },
-
         // Documentation
         md: { icon: 'markdown.svg', color: '#083fa1' },
         mdx: { icon: 'mdx.svg', color: '#fcb32c' },
         txt: { icon: 'document.svg', color: '#a0a0a0' },
-
         // Config
         gitignore: { icon: 'git.svg', color: '#f34f29' },
         env: { icon: 'tune.svg', color: '#e7c547' },
         config: { icon: 'settings.svg', color: '#6d8086' },
-
         // Java/Spring Boot
         java: { icon: 'java.svg', color: '#b07219' },
         class: { icon: 'javaclass.svg', color: '#b07219' }, // Compiled Java
@@ -188,10 +183,8 @@
         gradle: { icon: 'gradle.svg', color: '#02303a' },
         kt: { icon: 'kotlin.svg', color: '#7f52ff' }, // Kotlin
         kts: { icon: 'kotlin.svg', color: '#7f52ff' },
-
         // Maven/Gradle files (special handling below)
         properties: { icon: 'settings.svg', color: '#6d8086' },
-
         // C/C++
         c: { icon: 'c.svg', color: '#555555' },
         cpp: { icon: 'cpp.svg', color: '#f34b7d' },
@@ -199,32 +192,24 @@
         hpp: { icon: 'hpp.svg', color: '#f34b7d' },
         cc: { icon: 'cpp.svg', color: '#f34b7d' },
         cxx: { icon: 'cpp.svg', color: '#f34b7d' },
-
         // C#
         cs: { icon: 'csharp.svg', color: '#178600' },
         csproj: { icon: 'csharp.svg', color: '#178600' },
-
         // PHP
         php: { icon: 'php.svg', color: '#4f5d95' },
-
         // Ruby
         rb: { icon: 'ruby.svg', color: '#701516' },
-
         // Go
         go: { icon: 'go.svg', color: '#00add8' },
-
         // Rust
         rs: { icon: 'rust.svg', color: '#dea584' },
-
         // Shell
         sh: { icon: 'shell.svg', color: '#89e051' },
         bash: { icon: 'shell.svg', color: '#89e051' },
         zsh: { icon: 'shell.svg', color: '#89e051' },
         fish: { icon: 'shell.svg', color: '#89e051' },
-
         // Docker
         dockerfile: { icon: 'docker.svg', color: '#0db7ed' },
-
         // Images
         png: { icon: 'image.svg', color: '#a074c4' },
         jpg: { icon: 'image.svg', color: '#a074c4' },
@@ -233,77 +218,62 @@
         svg: { icon: 'svg.svg', color: '#ffb13b' },
         ico: { icon: 'image.svg', color: '#a074c4' },
         webp: { icon: 'image.svg', color: '#a074c4' },
-
         // Vue/Angular/React
         vue: { icon: 'vue.svg', color: '#42b883' },
-
         // Lock files
         lock: { icon: 'lock.svg', color: '#a0a0a0' },
-
         // Others
         sql: { icon: 'database.svg', color: '#e38c00' },
         pdf: { icon: 'pdf.svg', color: '#f40f02' },
         zip: { icon: 'zip.svg', color: '#f9dc5c' },
-
         // Default
         default: { icon: 'document.svg', color: '#a0a0a0' }
     };
-
     // Special folder types
     const FOLDER_ICONS = {
         // Node.js
         'node_modules': { icon: 'folder-node.svg', color: '#8cc84b' },
-
         // Source folders
         'src': { icon: 'folder-src.svg', color: '#f0eee6' },
         'source': { icon: 'folder-src.svg', color: '#f0eee6' },
         'sources': { icon: 'folder-src.svg', color: '#f0eee6' },
-
         // Build/Output folders
         'dist': { icon: 'folder-dist.svg', color: '#f0eee6' },
         'build': { icon: 'folder-build.svg', color: '#f0eee6' },
         'out': { icon: 'folder-dist.svg', color: '#f0eee6' },
         'target': { icon: 'folder-dist.svg', color: '#f0eee6' }, // Maven target
-
         // Public/Static
         'public': { icon: 'folder-public.svg', color: '#f0eee6' },
         'static': { icon: 'folder-public.svg', color: '#f0eee6' },
         'assets': { icon: 'folder-images.svg', color: '#f0eee6' },
         'resources': { icon: 'folder-resource.svg', color: '#f0eee6' },
-
         // Images
         'images': { icon: 'folder-images.svg', color: '#f0eee6' },
         'img': { icon: 'folder-images.svg', color: '#f0eee6' },
         'imgs': { icon: 'folder-images.svg', color: '#f0eee6' },
-
         // Components
         'components': { icon: 'folder-component.svg', color: '#f0eee6' },
         'widgets': { icon: 'folder-component.svg', color: '#f0eee6' },
-
         // Views/Pages
         'pages': { icon: 'folder-views.svg', color: '#f0eee6' },
         'views': { icon: 'folder-views.svg', color: '#f0eee6' },
         'screens': { icon: 'folder-views.svg', color: '#f0eee6' },
         'templates': { icon: 'folder-views.svg', color: '#f0eee6' },
-
         // Tests
         'tests': { icon: 'folder-test.svg', color: '#f0eee6' },
         'test': { icon: 'folder-test.svg', color: '#f0eee6' },
         '__tests__': { icon: 'folder-test.svg', color: '#f0eee6' },
         'spec': { icon: 'folder-test.svg', color: '#f0eee6' },
-
         // Utils/Helpers
         'utils': { icon: 'folder-helper.svg', color: '#f0eee6' },
         'helpers': { icon: 'folder-helper.svg', color: '#f0eee6' },
         'lib': { icon: 'folder-lib.svg', color: '#f0eee6' },
         'libs': { icon: 'folder-lib.svg', color: '#f0eee6' },
         'libraries': { icon: 'folder-lib.svg', color: '#f0eee6' },
-
         // Config
         'config': { icon: 'folder-config.svg', color: '#f0eee6' },
         'configs': { icon: 'folder-config.svg', color: '#f0eee6' },
         'configuration': { icon: 'folder-config.svg', color: '#f0eee6' },
-
         // Java/Spring specific
         'main': { icon: 'folder-src.svg', color: '#f0eee6' },
         'java': { icon: 'folder-src.svg', color: '#dcb67a' },
@@ -320,32 +290,26 @@
         'models': { icon: 'folder-model.svg', color: '#f0eee6' },
         'dto': { icon: 'folder-interface.svg', color: '#f0eee6' },
         'dao': { icon: 'folder-database.svg', color: '#f0eee6' },
-
         // Python specific
         'venv': { icon: 'folder-python.svg', color: '#3776ab' },
         'env': { icon: 'folder-python.svg', color: '#3776ab' },
         '__pycache__': { icon: 'folder-python.svg', color: '#3776ab' },
-
         // IDE
         '.git': { icon: 'folder-git.svg', color: '#f34f29' },
         '.github': { icon: 'folder-github.svg', color: '#6e5494' },
         '.vscode': { icon: 'folder-vscode.svg', color: '#007acc' },
         '.idea': { icon: 'folder-intellij.svg', color: '#087cfa' },
-
         // Default
         'default': { icon: 'folder.svg', color: '#dcb67a' }
     };
     const ICON_BASE_URL = 'https://raw.githack.com/PKief/vscode-material-icon-theme/main/icons/';
-
     const MAX_RENDER = 1000; // Max items to render at once
     const BATCH = 50; // Files to process per batch
-
+    const DOWNLOAD_THRESHOLD = 5 * 1024 * 1024; // 5MB - Projects larger than this will trigger download immediately
     // ============================================================================
     // STATE
     // ============================================================================
-
     const S = { files: [], tree: [], root: 'project', ctx: '', busy: false, rendered: 0, basePath: '', basePathSet: false };
-
     const $ = id => document.getElementById(id);
     const D = {
         side: $('sidebar'), tog: $('toggleSidebar'), tree: $('fileTree'),
@@ -358,68 +322,96 @@
         copy: $('copyBtn'), txt: $('downloadTxtBtn'),
         load: $('loadingOverlay'), toast: $('toastContainer')
     };
-
     const inp = document.createElement('input');
     inp.type = 'file'; inp.webkitdirectory = true; inp.multiple = true; inp.style.display = 'none';
     document.body.appendChild(inp);
 
     // ============================================================================
+    // MEMORY MANAGEMENT FUNCTION (ENHANCED)
+    // ============================================================================
+    const clearMemory = () => {
+        console.log("Clearing memory...");
+        if (S.ctx) {
+            // Revoke Blob URL if S.ctx was an array (for download)
+            if (S.isArray && Array.isArray(S.ctx)) {
+                // If S.ctx holds a Blob URL string, revoke it
+                // This scenario is less likely now, but keeping for safety
+                // S.ctx is usually the string content or the parts array
+                // If it's an array of parts, just nullify it
+                 S.ctx.length = 0; // Clear the array elements
+                 S.ctx = null;     // Nullify the reference
+            } else if (typeof S.ctx === 'string') {
+                 // If it's a string, just nullify it
+                 S.ctx = null;
+            } else {
+                 // Fallback nullification
+                 S.ctx = null;
+            }
+            S.isArray = false;
+        }
+        if (S.files) {
+            // Nullify the file object references inside S.files array elements before clearing the array
+            S.files.forEach(fileObj => {
+                if (fileObj && fileObj.file) {
+                    fileObj.file = null; // Release the File object reference
+                }
+            });
+            S.files.length = 0; // Clear the array
+            S.files = null;      // Nullify the reference
+        }
+        if (S.tree) {
+            S.tree.length = 0; // Clear the array
+            S.tree = null;     // Nullify the reference
+        }
+        console.log("Memory cleared.");
+    };
+
+    // ============================================================================
     // UTILS
     // ============================================================================
-
     const load = s => (D.load.classList.toggle('active', s), S.busy = s);
-
     const toast = (m, t = 'info') => {
         const el = document.createElement('div');
         el.className = `toast ${t}`;
         const ic = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' }[t];
         el.innerHTML = `<span class="material-symbols-outlined">${ic}</span><span>${m}</span>`;
         D.toast.appendChild(el);
-        setTimeout(() => { el.style.animation = 'slideInRight 0.3s ease reverse'; setTimeout(() => el.remove(), 300); }, 2500);
+    setTimeout(() => { el.style.animation = 'slideInRight 0.3s ease reverse'; setTimeout(() => el.remove(), 300); }, 4500);
     };
-
     const bytes = n => { if (!n) return '0 B'; const k = 1024, s = ['B', 'KB', 'MB', 'GB'], i = ~~(Math.log(n) / Math.log(k)); return `${(n / k ** i).toFixed(1)} ${s[i]}`; };
     const words = n => {
         if (n === 0) return 'zero';
-
         // Handle very large numbers with abbreviations
         if (n >= 1000000000) { // Billions
             const billions = Math.floor(n / 1000000000);
             const remainder = n % 1000000000;
             const millions = Math.floor(remainder / 1000000);
-
             if (millions > 0) {
                 return `${billions.toLocaleString()} billion ${millions.toLocaleString()} million`;
             }
             return `${billions.toLocaleString()} billion`;
         }
-
         if (n >= 1000000) { // Millions
             const millions = Math.floor(n / 1000000);
             const remainder = n % 1000000;
             const thousands = Math.floor(remainder / 1000);
-
             if (thousands > 0) {
                 return `${millions.toLocaleString()} million ${thousands.toLocaleString()} thousand`;
             }
             return `${millions.toLocaleString()} million`;
         }
-
         if (n >= 1000) { // Thousands
             const thousands = Math.floor(n / 1000);
             const remainder = n % 1000;
-
             if (remainder > 0) {
                 return `${thousands.toLocaleString()} thousand ${remainder}`;
             }
             return `${thousands.toLocaleString()} thousand`;
         }
-
         // For numbers under 1000, use full word conversion
         const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
         const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
         const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-
         const convertHundreds = num => {
             if (num === 0) return '';
             if (num < 10) return ones[num];
@@ -433,10 +425,8 @@
             const remainder = num % 100;
             return ones[hundred] + ' hundred' + (remainder ? ' ' + convertHundreds(remainder) : '');
         };
-
         return convertHundreds(n);
     };
-
     // Build a full path string by optionally prepending a user-supplied base path.
     // If no base path is provided, return the relative path unchanged.
     const getFullPath = rel => {
@@ -454,7 +444,6 @@
         }
         return r;
     };
-
     const ign = p => { const pts = p.split('/'); if (pts.some(x => IGNORED.folders.has(x))) return true; const e = pts[pts.length - 1].split('.').pop().toLowerCase(); return IGNORED.exts.has(e); };
     const isBinary = filename => {
         const ext = filename.split('.').pop().toLowerCase();
@@ -473,10 +462,8 @@
                 cls: 'folder-icon'
             };
         }
-
         // File icon
         const fileName = name.toLowerCase();
-
         // ========================================
         // SPRING BOOT / JAVA SPECIAL FILES
         // ========================================
@@ -488,7 +475,6 @@
                 cls: 'maven-icon'
             };
         }
-
         if (fileName === 'build.gradle' || fileName === 'build.gradle.kts' || fileName === 'settings.gradle' || fileName === 'settings.gradle.kts') {
             return {
                 type: 'svg',
@@ -497,7 +483,6 @@
                 cls: 'gradle-icon'
             };
         }
-
         if (fileName === 'application.properties' || fileName === 'application.yml' || fileName === 'application.yaml') {
             return {
                 type: 'svg',
@@ -506,7 +491,6 @@
                 cls: 'spring-icon'
             };
         }
-
         if (fileName.startsWith('application-') && (fileName.endsWith('.properties') || fileName.endsWith('.yml') || fileName.endsWith('.yaml'))) {
             return {
                 type: 'svg',
@@ -515,7 +499,6 @@
                 cls: 'spring-icon'
             };
         }
-
         // ========================================
         // PYTHON SPECIAL FILES
         // ========================================
@@ -527,7 +510,6 @@
                 cls: 'python-icon'
             };
         }
-
         if (fileName === 'setup.py' || fileName === 'setup.cfg') {
             return {
                 type: 'svg',
@@ -536,7 +518,6 @@
                 cls: 'python-icon'
             };
         }
-
         if (fileName === 'pipfile' || fileName === 'pipfile.lock') {
             return {
                 type: 'svg',
@@ -545,7 +526,6 @@
                 cls: 'python-icon'
             };
         }
-
         if (fileName === 'pyproject.toml') {
             return {
                 type: 'svg',
@@ -554,7 +534,6 @@
                 cls: 'python-icon'
             };
         }
-
         if (fileName === 'manage.py') { // Django
             return {
                 type: 'svg',
@@ -563,7 +542,6 @@
                 cls: 'django-icon'
             };
         }
-
         // ========================================
         // JAVASCRIPT/NODE SPECIAL FILES
         // ========================================
@@ -575,7 +553,6 @@
                 cls: 'nodejs-icon'
             };
         }
-
         if (fileName === 'package-lock.json') {
             return {
                 type: 'svg',
@@ -584,7 +561,6 @@
                 cls: 'npm-icon'
             };
         }
-
         if (fileName === 'yarn.lock') {
             return {
                 type: 'svg',
@@ -593,7 +569,6 @@
                 cls: 'yarn-icon'
             };
         }
-
         if (fileName === 'tsconfig.json') {
             return {
                 type: 'svg',
@@ -602,7 +577,6 @@
                 cls: 'typescript-icon'
             };
         }
-
         if (fileName === 'webpack.config.js' || fileName === 'webpack.config.ts') {
             return {
                 type: 'svg',
@@ -611,7 +585,6 @@
                 cls: 'webpack-icon'
             };
         }
-
         if (fileName === 'vite.config.js' || fileName === 'vite.config.ts') {
             return {
                 type: 'svg',
@@ -620,7 +593,6 @@
                 cls: 'vite-icon'
             };
         }
-
         if (fileName === 'next.config.js' || fileName === 'next.config.ts') {
             return {
                 type: 'svg',
@@ -629,7 +601,6 @@
                 cls: 'next-icon'
             };
         }
-
         // ========================================
         // GIT FILES
         // ========================================
@@ -641,7 +612,6 @@
                 cls: 'git-icon'
             };
         }
-
         // ========================================
         // DOCKER FILES
         // ========================================
@@ -653,7 +623,6 @@
                 cls: 'docker-icon'
             };
         }
-
         if (fileName === 'docker-compose.yml' || fileName === 'docker-compose.yaml') {
             return {
                 type: 'svg',
@@ -662,7 +631,6 @@
                 cls: 'docker-icon'
             };
         }
-
         // ========================================
         // ENV FILES
         // ========================================
@@ -674,7 +642,6 @@
                 cls: 'env-icon'
             };
         }
-
         // ========================================
         // README FILES
         // ========================================
@@ -686,7 +653,6 @@
                 cls: 'readme-icon'
             };
         }
-
         // ========================================
         // LICENSE FILES
         // ========================================
@@ -698,13 +664,11 @@
                 cls: 'license-icon'
             };
         }
-
         // ========================================
         // GET BY EXTENSION (DEFAULT)
         // ========================================
         const ext = name.split('.').pop().toLowerCase();
         const iconData = ICONS[ext] || ICONS['default'];
-
         return {
             type: 'svg',
             url: ICON_BASE_URL + iconData.icon,
@@ -712,13 +676,10 @@
             cls: `${ext}-icon`
         };
     };
-
-    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '<').replace(/>/g, '>');
     // ============================================================================
     // CUSTOM MODAL - NO ALERTS
     // ============================================================================
-
     const modal = (title, message, onConfirm) => {
         // Create modal overlay
         const overlay = document.createElement('div');
@@ -738,29 +699,23 @@
                 </div>
             </div>
         `;
-
         document.body.appendChild(overlay);
-
         // Handle buttons
         const cancelBtn = overlay.querySelector('.btn-cancel');
         const confirmBtn = overlay.querySelector('.btn-confirm');
-
         const close = () => {
             overlay.style.animation = 'fadeOut 0.2s ease';
             setTimeout(() => overlay.remove(), 200);
         };
-
         cancelBtn.onclick = close;
         confirmBtn.onclick = () => {
             close();
             if (onConfirm) onConfirm();
         };
-
         // Close on outside click
         overlay.onclick = e => {
             if (e.target === overlay) close();
         };
-
         // ESC key
         const handleEsc = e => {
             if (e.key === 'Escape') {
@@ -770,11 +725,9 @@
         };
         document.addEventListener('keydown', handleEsc);
     };
-
     // ============================================================================
-    // CLEAR ALL FUNCTION
+    // CLEAR ALL FUNCTION (ENHANCED)
     // ============================================================================
-
     const clearAll = () => {
         // Show confirmation modal
         modal(
@@ -789,7 +742,6 @@
                         <small>Click "Select Directory" to get started</small>
                     </div>
                 `;
-
                 // Clear editor
                 D.ed.innerHTML = `
                     <div class="editor-placeholder">
@@ -798,7 +750,6 @@
                         <small>Select files and click "Create Context" button</small>
                     </div>
                 `;
-
                 // Reset state
                 S.files = [];
                 S.tree = [];
@@ -806,32 +757,29 @@
                 S.root = 'project';
                 S.busy = false;
                 S.rendered = 0;
-
                 // Reset stats
                 D.cnt.textContent = '0';
                 D.tok.textContent = '0';
                 D.sz.textContent = '0 B';
                 D.pron.textContent = 'zero tokens';
                 D.lang.textContent = '-';
-
                 // Clear search
                 D.search.value = '';
-
                 // Reset file input
                 inp.value = '';
-
+                // Clear memory explicitly
+                clearMemory();
                 // Show toast
                 toast('All cleared successfully', 'success');
             }
         );
     };
-
     // ============================================================================
-    // TREE BUILDING - ULTRA FAST
+    // TREE BUILDING - ULTRA FAST (ENSURE FILTERING)
     // ============================================================================
-
     const build = files => {
         const root = new Map();
+        // Ensure files passed here are already filtered by `ign`
         files.forEach(f => {
             const pts = f.path.split('/');
             let cur = root;
@@ -848,19 +796,15 @@
         });
         return Array.from(root.values());
     };
-
     // ============================================================================
     // VIRTUAL RENDERING - Only render visible items
     // ============================================================================
-
     const render = (nodes, lv = 0, acc = []) => {
         if (acc.length > MAX_RENDER) return acc; // Stop if too many
-
         nodes.forEach(nd => {
             const ic = ico(nd.n, nd.t === 'd');
             const has = nd.t === 'd' && nd.kids.size > 0;
             const sz = nd.f ? bytes(nd.f.size) : '';
-
             acc.push({
                 html: `<div class="tree-item ${nd.ig ? 'ignored' : ''}" data-path="${nd.full}">
                     <div class="tree-item-content" data-level="${lv}">
@@ -880,28 +824,24 @@
                 </div>`
             });
         });
-
         return acc;
     };
-
     const renderSub = (nodes, lv) => render(nodes, lv, []).map(x => x.html).join('');
-
     // ============================================================================
-    // FILE LOADING - ASYNC CHUNKS
+    // FILE LOADING - ASYNC CHUNKS (ENHANCED FILTERING & UI UPDATE)
     // ============================================================================
-
     const loadFiles = async list => {
         try {
+            // Clear previous memory before loading new files
+            clearMemory();
+
             const loadingText = D.load.querySelector('p');
             if (loadingText) loadingText.textContent = `Loading ${list.length} files...`;
-
             // Fast path: convert FileList to Array
             const all = Array.from(list);
-
             if (loadingText) loadingText.textContent = 'Filtering files...';
             await new Promise(r => setTimeout(r, 0));
-
-            // Filter files
+            // Filter files - CRITICAL: Ensure all ignored files are removed here
             S.files = all.filter(f => !ign(f.webkitRelativePath))
                 .map(f => ({
                     path: f.webkitRelativePath,
@@ -909,7 +849,6 @@
                     size: f.size,
                     file: f
                 }));
-
             // Auto-detect absolute base path when running in desktop/Electron environments
             // where File objects may expose a non-standard `path` property.
             if (!S.basePathSet) {
@@ -938,28 +877,20 @@
                     }
                 }
             }
-
             if (S.files.length === 0) { toast('No valid files', 'warning'); load(false); return; }
             if (S.files.length > 5000) { toast(`Large directory (${S.files.length} files) - rendering first 1000`, 'warning'); }
-
             if (loadingText) loadingText.textContent = 'Building file tree...';
             S.root = S.files[0].path.split('/')[0];
-
             // Let UI update before building tree
             await new Promise(r => setTimeout(r, 0));
-
-            S.tree = build(S.files.slice(0, 3000)); // Limit tree size
-
+            S.tree = build(S.files.slice(0, 3000)); // Limit tree size, but build from fully filtered list
             if (loadingText) loadingText.textContent = 'Rendering tree...';
             await new Promise(r => setTimeout(r, 0));
-
             // Render tree
             const items = render(S.tree);
             D.tree.innerHTML = items.map(x => x.html).join('');
             S.rendered = items.length;
-
             stats();
-
             toast(`Loaded ${S.files.length} files`, 'success');
         } catch (e) {
             console.error('Load error:', e);
@@ -968,19 +899,15 @@
             load(false);
         }
     };
-
     // ============================================================================
     // STATS UPDATE
     // ============================================================================
-
     const stats = () => {
         const cbs = Array.from(document.querySelectorAll('.file-checkbox:checked:not([disabled])'));
         const paths = cbs.map(c => c.dataset.path);
         const files = S.files.filter(f => paths.includes(f.path));
-
         const total = files.reduce((s, f) => s + f.size, 0);
         const toks = Math.ceil(total / 4);
-
         // Get languages
         const langs = new Set();
         files.forEach(f => {
@@ -989,7 +916,6 @@
                 langs.add(ext);
             }
         });
-
         // Update DOM
         D.cnt.textContent = files.length;
         D.tok.textContent = toks.toLocaleString();
@@ -997,89 +923,80 @@
         D.pron.textContent = words(toks) + ' tokens';
         D.lang.textContent = langs.size ? Array.from(langs).join(', ') : '-';
     };
-
     // ============================================================================
-    // CONTEXT GENERATION - STREAMING
+    // CONTEXT GENERATION - STREAMING (MODIFIED AGAIN)
     // ============================================================================
-
-  const gen = async () => {
+    const gen = async () => {
         if (S.busy) return;
-
         const cbs = Array.from(document.querySelectorAll('.file-checkbox:checked:not([disabled])'));
         if (!cbs.length) { toast('Select files first', 'warning'); return; }
-
         load(true);
         D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Preparing...</p></div>';
 
-        // Use auto-detected base path if available (set in loadFiles). If none was detected, continue using relative paths.
-
         try {
             const paths = cbs.map(c => c.dataset.path);
+            // Ensure we only use files that were originally loaded (and thus already filtered)
             const files = S.files.filter(f => paths.includes(f.path));
-
             // Separate binary and text files
             const textFiles = [];
-            const binaryFiles = [];
-            
+            const binaryFiles = []; // This list is now only for stats/display in the tree, not for content inclusion
             files.forEach(f => {
                 if (isBinary(f.name)) {
-                    binaryFiles.push(f);
+                    binaryFiles.push(f); // Keep for tree display, but not for content generation
                 } else {
-                    textFiles.push(f);
+                    textFiles.push(f); // Only these will be read and included in the context
                 }
             });
 
-            const totalSize = textFiles.reduce((s, f) => s + f.size, 0);
-            const isHuge = totalSize > 500 * 1024 * 1024;
+            const totalTextSize = textFiles.reduce((s, f) => s + f.size, 0);
+            const isHuge = totalTextSize > 500 * 1024 * 1024;
+            const isAboveDownloadThreshold = totalTextSize > DOWNLOAD_THRESHOLD; // Check against new threshold
 
-            if (totalSize > 100 * 1024 * 1024) {
-                toast(`⚠️ Large project (${bytes(totalSize)})`, 'warning');
+            if (totalTextSize > 100 * 1024 * 1024) {
+                toast(`⚠️ Large project (${bytes(totalTextSize)})`, 'warning');
             }
 
             const struct = genStruct(S.tree);
 
-            if (isHuge) {
-                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">warning</span><h3 style="color:#fbbf24;margin:10px 0">Huge Project!</h3><p>Size: <strong>${bytes(totalSize)}</strong></p><p>Too large for preview. Use download.</p></div>`;
-                await genAndDL(struct, textFiles, binaryFiles);
-                toast('Ready for download!', 'success');
-                return;
+            // PRIORITIZE DOWNLOAD: If above threshold, skip full display and go straight to download
+            if (isAboveDownloadThreshold) {
+                console.log("Project size exceeds threshold, triggering download immediately.");
+                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">warning</span><h3 style="color:#fbbf24;margin:10px 0">Large Project!</h3><p>Size: <strong>${bytes(totalTextSize)}</strong></p><p>Downloading automatically...</p></div>`;
+                await genAndDL(struct, textFiles, binaryFiles); // Pass both for stats display in genAndDL
+                toast('Download ready!', 'success');
+                load(false);
+                return; // Exit gen function after download
             }
 
-            const isLarge = totalSize > 50 * 1024 * 1024;
+            const isLarge = totalTextSize > 50 * 1024 * 1024;
             const contents = [];
             let done = 0, failed = 0, skipped = binaryFiles.length;
-
             // Process text files in larger batches with better progress
             const FAST_BATCH = 100;
             for (let i = 0; i < textFiles.length; i += FAST_BATCH) {
                 const batch = textFiles.slice(i, i + FAST_BATCH);
-                
                 // Read all files in parallel for speed
                 const results = await Promise.allSettled(
-                    batch.map(f => f.file.text())
+                    batch.map(f => f.file.text()) // Only read files from the 'textFiles' list
                 );
-                
                 results.forEach((result, idx) => {
                     if (result.status === 'fulfilled') {
-                        contents.push({ 
-                            path: batch[idx].path, 
-                            content: result.value 
+                        contents.push({
+                            path: batch[idx].path,
+                            content: result.value
                         });
                     } else {
                         console.warn('Skip', batch[idx].name, result.reason);
                         failed++;
                     }
                 });
-
                 done += batch.length;
                 const pct = Math.round(done / textFiles.length * 100);
                 const status = [];
                 status.push(`<strong>${done}/${textFiles.length}</strong> files`);
                 if (skipped > 0) status.push(`<span style="color:#3b82f6">${skipped} binary</span>`);
                 if (failed > 0) status.push(`<span style="color:#fbbf24">${failed} failed</span>`);
-                
                 D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Reading files: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
-                
                 // Yield to UI only every 5 batches for better performance
                 if (i % (FAST_BATCH * 5) === 0) {
                     await new Promise(r => setTimeout(r, 0));
@@ -1088,31 +1005,32 @@
 
             D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building output...</p></div>';
             await new Promise(r => setTimeout(r, 10));
-
             const parts = [];
-            parts.push('<folder-structure>\n', struct, '</folder-structure>\n\n');
-
+            parts.push('<folder-structure>\n', struct, '</folder-structure>\n');
             // Binary files are intentionally excluded from the generated output (they remain visible in the tree)
-
             // Build document sections faster - no UI updates during build
             contents.forEach(({ path, content }) => {
                 const full = getFullPath(path);
                 parts.push(`=== FILE: ${full} ===\n`);
-                parts.push(`<document path="${path}">\n`, content, '\n</document>\n\n');
+                parts.push(`<document path="${path}">\n`, content, '\n</document>\n');
             });
 
             let ctx;
             try {
-                ctx = parts.join('');
+                ctx = parts.join(''); // This is now only done for smaller projects
             } catch (e) {
-                console.error('Too large:', e);
+                console.error('Too large for string join (unexpected):', e);
                 D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">warning</span><h3 style="color:#fbbf24;margin:10px 0">Too Large!</h3><p>Size: <strong>${bytes(parts.reduce((s, p) => s + p.length, 0))}</strong></p><p>Use download button.</p></div>`;
                 S.ctx = parts;
                 S.isArray = true;
                 toast('Ready for download!', 'success');
                 load(false);
+                // Explicitly clear parts array
+                parts.length = 0;
                 return;
             }
+            // Explicitly clear parts array after join for smaller projects
+            parts.length = 0;
 
             S.ctx = ctx;
             S.isArray = false;
@@ -1124,13 +1042,15 @@
             } else {
                 D.ed.innerHTML = `<pre style="margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto">${esc(ctx)}</pre>`;
             }
-
             const stats = [];
             stats.push(`${textFiles.length} files`);
             if (binaryFiles.length > 0) stats.push(`${binaryFiles.length} binary excluded`);
             stats.push(`${bytes(ctx.length)}`);
-            
             toast(`✓ Done! ${stats.join(' • ')}`, 'success');
+
+            // Explicitly clear contents array after display
+            contents.length = 0;
+
         } catch (e) {
             console.error('Gen error:', e);
             toast('Failed: ' + e.message, 'error');
@@ -1140,32 +1060,33 @@
         }
     };
 
-const genAndDL = async (struct, textFiles, binaryFiles) => {
+    const genAndDL = async (struct, textFiles, binaryFiles) => {
         const parts = [];
-        parts.push('<folder-structure>\n', struct, '</folder-structure>\n\n');
-        
-        // Binary files are intentionally excluded from the generated download (they remain visible in the tree)
-        
+        parts.push('<folder-structure>\n', struct, '</folder-structure>\n');
+
         let done = 0;
         const FAST_BATCH = 100;
-        
         for (let i = 0; i < textFiles.length; i += FAST_BATCH) {
             const batch = textFiles.slice(i, i + FAST_BATCH);
-            
             const results = await Promise.allSettled(
-                batch.map(f => f.file.text())
+                batch.map(f => f.file.text()) // Only read files from the 'textFiles' list
             );
-            
             results.forEach((result, idx) => {
                 if (result.status === 'fulfilled') {
                     const p = batch[idx].path;
                     parts.push(`=== FILE: ${getFullPath(p)} ===\n`);
-                    parts.push(`<document path="${p}">\n`, result.value, '\n</document>\n\n');
+                    parts.push(`<document path="${p}">\n`, result.value, '\n</document>\n');
+                    // OPTIMIZE: Nullify the file reference from S.files after reading to help GC
+                    // Find the corresponding file in S.files and nullify its 'file' property
+                    // This is crucial for memory management during large downloads
+                    const sFileIndex = S.files.findIndex(sf => sf.path === p);
+                    if (sFileIndex !== -1) {
+                        S.files[sFileIndex].file = null; // Release the File object reference
+                    }
                 } else {
                     console.warn('Skip', batch[idx].name, result.reason);
                 }
             });
-            
             done += batch.length;
             const pct = Math.round(done / textFiles.length * 100);
             const status = [];
@@ -1173,30 +1094,35 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
             if (binaryFiles && binaryFiles.length > 0) {
                 status.push(`${binaryFiles.length} binary`);
             }
-            
             D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">download</span><p>Preparing: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
-            
-            if (i % (FAST_BATCH * 5) === 0) {
-                await new Promise(r => setTimeout(r, 0));
+
+            // OPTIMIZE: Yield control frequently during parts building
+            if (i % (FAST_BATCH * 5) === 0) { // Yield every 5 batches
+                 await new Promise(r => setTimeout(r, 0));
             }
         }
-        
+
+        // OPTIMIZE: Yield control one final time before creating Blob
+        await new Promise(r => setTimeout(r, 0));
+
         const blob = new Blob(parts, { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `${S.root}-context.txt`;
         a.click();
-        URL.revokeObjectURL(url);
-        
+        URL.revokeObjectURL(url); // REVOKE URL IMMEDIATELY
+
         const stats = [];
         stats.push(`${textFiles.length} files`);
         if (binaryFiles && binaryFiles.length > 0) {
             stats.push(`${binaryFiles.length} binary`);
         }
         stats.push(bytes(blob.size));
-        
         D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">check_circle</span><p>Downloaded!</p><small>File: ${S.root}-context.txt</small><small>${stats.join(' • ')}</small></div>`;
+
+        // Explicitly clear parts array after download
+        parts.length = 0;
     };
 
     const genStruct = (nodes, pfx = '') => {
@@ -1210,11 +1136,14 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
         });
         return r;
     };
+    // ============================================================================
+    // PYTHON SCRIPT DOWNLOAD
+    // ============================================================================
+   
 
     // ============================================================================
     // EXPORT
     // ============================================================================
-
     const copyClip = async () => {
         if (!S.ctx) { toast('Generate first', 'warning'); return; }
         try {
@@ -1230,7 +1159,6 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
             toast('Copy failed: ' + e.message, 'error');
         }
     };
-
     const dl = fmt => {
         if (!S.ctx) { toast('Generate first', 'warning'); return; }
         try {
@@ -1241,8 +1169,12 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
                 a.href = url;
                 a.download = `${S.root}-context.${fmt}`;
                 a.click();
-                URL.revokeObjectURL(url);
+                URL.revokeObjectURL(url); // REVOKE URL IMMEDIATELY
                 toast(`Downloaded (${bytes(blob.size)})`, 'success');
+                // Explicitly clear S.ctx array after download if it was an array
+                S.ctx.length = 0;
+                S.ctx = null;
+                S.isArray = false;
                 return;
             }
             const blob = new Blob([S.ctx], { type: 'text/plain' });
@@ -1251,33 +1183,30 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
             a.href = url;
             a.download = `${S.root}-context.${fmt}`;
             a.click();
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(url); // REVOKE URL IMMEDIATELY
             toast(`Downloaded (${bytes(blob.size)})`, 'success');
+            // Explicitly clear S.ctx string after download if it was a string
+            S.ctx = null;
+            S.isArray = false;
         } catch (e) {
             console.error('Download error:', e);
             toast('Download failed: ' + e.message, 'error');
         }
     };
-
     // ============================================================================
     // EVENTS
     // ============================================================================
-
     const setup = () => {
         D.tog.onclick = () => D.side.classList.toggle('collapsed');
         D.sel.onclick = () => inp.click();
-
         // Optimize file input change handler
         inp.onchange = e => {
             if (!e.target.files.length) return;
-
             // Show loader IMMEDIATELY
             load(true);
-
             // Process files in next tick to let loader render
             setTimeout(() => loadFiles(e.target.files), 0);
         };
-
         D.tree.onclick = e => {
             const btn = e.target.closest('.expand-btn');
             if (btn) {
@@ -1290,7 +1219,6 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
                 }
                 return;
             }
-
             const cb = e.target.closest('.file-checkbox');
             if (cb && !cb.disabled) {
                 const item = cb.closest('.tree-item');
@@ -1298,7 +1226,6 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
                 stats();
             }
         };
-
         D.search.oninput = e => {
             const q = e.target.value.toLowerCase();
             document.querySelectorAll('.tree-item').forEach(item => {
@@ -1306,7 +1233,6 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
                 item.style.display = n.includes(q) ? '' : 'none';
             });
         };
-
         const togFold = o => {
             document.querySelectorAll('.expand-btn').forEach(btn => {
                 const item = btn.closest('.tree-item');
@@ -1318,43 +1244,34 @@ const genAndDL = async (struct, textFiles, binaryFiles) => {
                 }
             });
         };
-
         const togCheck = c => {
             document.querySelectorAll('.file-checkbox:not([disabled])').forEach(cb => cb.checked = c);
             stats();
         };
-
         D.exp.onclick = () => togFold(true);
         D.col.onclick = () => togFold(false);
         D.all.onclick = () => togCheck(true);
         D.none.onclick = () => togCheck(false);
-
         D.gen.onclick = gen;
         D.copy.onclick = copyClip;
         D.txt.onclick = () => dl('txt');
-
         // Clear All button
         const clearBtn = $('clearAll');
         if (clearBtn) {
             clearBtn.onclick = clearAll;
         }
-
         document.onkeydown = e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); D.side.classList.toggle('collapsed'); }
         };
     };
-
     // ============================================================================
     // INIT
     // ============================================================================
-
     const init = () => {
         setup();
         console.log('%c🚀 CodeToContext Ready', 'color:#e3dacc;font-weight:bold;font-size:16px');
         console.log('%c⚡ Optimized for 10,000+ files', 'color:#10b981;font-size:12px');
     };
-
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
-
 })();
