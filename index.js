@@ -1418,33 +1418,147 @@
             D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building output...</p></div>';
             load(true, 'Building output...');
             await new Promise(r => setTimeout(r, 10));
+            
+            // Gather metadata
+            const now = new Date();
+            const timestamp = now.toISOString();
+            const formattedDate = now.toLocaleString('en-US', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', 
+                hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' 
+            });
+            const totalFiles = textFiles.length;
+            const totalSize = textFiles.reduce((s, f) => s + f.size, 0);
+            const estimatedTokens = Math.ceil(totalSize / 4);
+            
+            // Get language statistics
+            const langStats = {};
+            textFiles.forEach(f => {
+                const ext = f.name.split('.').pop().toUpperCase();
+                langStats[ext] = (langStats[ext] || 0) + 1;
+            });
+            const languageList = Object.entries(langStats)
+                .sort((a, b) => b[1] - a[1])
+                .map(([lang, count]) => `${lang} (${count} file${count > 1 ? 's' : ''})`)
+                .join(', ');
+            
             const parts = [];
             // === AI Model Template Logic ===
             if (S.model === 'gpt') {
-                parts.push('# Project Context for GPT-4\n\n');
-                parts.push('## Instructions\n');
-                parts.push('You are being provided with a complete codebase context. Please:\n');
-                parts.push('- Analyze the code structure and architecture\n');
-                parts.push('- Understand dependencies between files\n');
-                parts.push('- Maintain consistency with existing code patterns\n');
-                parts.push('- Reference specific files when answering questions\n\n');
-                parts.push('## Project Structure\n```\n', struct, '```\n\n');
-                parts.push('## Source Files\n\n');
+                parts.push('# 🤖 PROJECT CONTEXT FOR GPT-4\n');
+                parts.push('='.repeat(80) + '\n\n');
+                
+                parts.push('## 📋 METADATA\n');
+                parts.push(`**Generated:** ${formattedDate}\n`);
+                parts.push(`**Timestamp:** ${timestamp}\n`);
+                parts.push(`**Project Root:** ${S.root}\n`);
+                parts.push(`**Total Files:** ${totalFiles.toLocaleString()}\n`);
+                parts.push(`**Total Size:** ${bytes(totalSize)}\n`);
+                parts.push(`**Estimated Tokens:** ~${estimatedTokens.toLocaleString()}\n`);
+                parts.push(`**Languages Used:** ${languageList}\n\n`);
+                
+                parts.push('## 🎯 SYSTEM PROMPT\n');
+                parts.push('```\n');
+                parts.push('You are an expert software engineer analyzing a complete codebase.\n\n');
+                parts.push('INSTRUCTIONS:\n');
+                parts.push('- Treat this as the COMPLETE and AUTHORITATIVE source of truth for this project\n');
+                parts.push('- Analyze the code structure, architecture, and design patterns\n');
+                parts.push('- Understand dependencies and relationships between files\n');
+                parts.push('- Maintain consistency with existing code patterns and conventions\n');
+                parts.push('- Always reference specific file paths when discussing code\n');
+                parts.push('- Consider the project holistically before making suggestions\n');
+                parts.push('- Respect the established coding style and naming conventions\n\n');
+                parts.push('DATA FORMAT:\n');
+                parts.push('- Each file is presented with its full path and language\n');
+                parts.push('- Code blocks use appropriate syntax highlighting\n');
+                parts.push('- The project structure is provided first for context\n');
+                parts.push('```\n\n');
+                
+                parts.push('## 📁 PROJECT STRUCTURE\n```\n', struct, '```\n\n');
+                parts.push('='.repeat(80) + '\n');
+                parts.push('## 📄 SOURCE FILES\n');
+                parts.push('='.repeat(80) + '\n\n');
             } else if (S.model === 'claude') {
-                parts.push('# Codebase Context for Claude\n\n');
-                parts.push('<context>\n');
-                parts.push('<purpose>\n');
-                parts.push('This is a complete project codebase provided for analysis, code review, or implementation tasks.\n');
-                parts.push('Please analyze the architecture, patterns, and maintain consistency when making changes.\n');
-                parts.push('</purpose>\n\n');
+                parts.push('<codebase_context>\n\n');
+                
+                parts.push('<metadata>\n');
+                parts.push(`  <generated_at>${timestamp}</generated_at>\n`);
+                parts.push(`  <formatted_date>${formattedDate}</formatted_date>\n`);
+                parts.push(`  <project_root>${S.root}</project_root>\n`);
+                parts.push(`  <statistics>\n`);
+                parts.push(`    <total_files>${totalFiles}</total_files>\n`);
+                parts.push(`    <total_size>${bytes(totalSize)}</total_size>\n`);
+                parts.push(`    <estimated_tokens>${estimatedTokens}</estimated_tokens>\n`);
+                parts.push(`  </statistics>\n`);
+                parts.push(`  <languages>\n`);
+                Object.entries(langStats).sort((a, b) => b[1] - a[1]).forEach(([lang, count]) => {
+                    parts.push(`    <language name="${lang}" count="${count}" />\n`);
+                });
+                parts.push(`  </languages>\n`);
+                parts.push('</metadata>\n\n');
+                
+                parts.push('<system_prompt>\n');
+                parts.push('  <role>Expert Software Engineer</role>\n');
+                parts.push('  <task>Analyze and work with this complete codebase</task>\n');
+                parts.push('  <instructions>\n');
+                parts.push('    - This is the COMPLETE and AUTHORITATIVE codebase\n');
+                parts.push('    - Analyze architecture, patterns, and code organization\n');
+                parts.push('    - Understand file dependencies and relationships\n');
+                parts.push('    - Maintain existing code style and conventions\n');
+                parts.push('    - Reference specific file paths in your responses\n');
+                parts.push('    - Think holistically about the entire project\n');
+                parts.push('    - Respect established patterns and best practices\n');
+                parts.push('  </instructions>\n');
+                parts.push('  <data_format>\n');
+                parts.push('    - Files are in XML format with path and language metadata\n');
+                parts.push('    - Project structure provided first for navigation\n');
+                parts.push('    - All file contents are complete and unmodified\n');
+                parts.push('  </data_format>\n');
+                parts.push('</system_prompt>\n\n');
+                
                 parts.push('<project_structure>\n', struct, '</project_structure>\n\n');
                 parts.push('<source_files>\n');
             } else if (S.model === 'gemini') {
-                parts.push('# Complete Project Context for Gemini\n\n');
-                parts.push('## Overview\n');
-                parts.push('Complete codebase with file structure and contents for analysis and development tasks.\n\n');
-                parts.push('## Directory Structure\n```\n', struct, '```\n\n');
-                parts.push('## File Contents\n\n');
+                parts.push('# 🚀 COMPLETE PROJECT CONTEXT FOR GEMINI\n');
+                parts.push('═'.repeat(80) + '\n\n');
+                
+                parts.push('## 📊 PROJECT METADATA\n\n');
+                parts.push('| **Attribute** | **Value** |\n');
+                parts.push('|---------------|-----------|\n');
+                parts.push(`| Generated | ${formattedDate} |\n`);
+                parts.push(`| ISO Timestamp | ${timestamp} |\n`);
+                parts.push(`| Project Root | \`${S.root}\` |\n`);
+                parts.push(`| Total Files | ${totalFiles.toLocaleString()} |\n`);
+                parts.push(`| Total Size | ${bytes(totalSize)} |\n`);
+                parts.push(`| Estimated Tokens | ~${estimatedTokens.toLocaleString()} |\n\n`);
+                
+                parts.push('### 🔤 Languages Distribution\n\n');
+                Object.entries(langStats).sort((a, b) => b[1] - a[1]).forEach(([lang, count]) => {
+                    const percentage = ((count / totalFiles) * 100).toFixed(1);
+                    parts.push(`- **${lang}**: ${count} file${count > 1 ? 's' : ''} (${percentage}%)\n`);
+                });
+                parts.push('\n');
+                
+                parts.push('## 🧠 SYSTEM PROMPT & INSTRUCTIONS\n\n');
+                parts.push('> **Role**: Expert Software Engineer and Code Analyst\n\n');
+                parts.push('**📌 Key Instructions:**\n\n');
+                parts.push('1. **Complete Context**: This is the FULL and AUTHORITATIVE codebase\n');
+                parts.push('2. **Analyze Thoroughly**: Understand architecture, patterns, and dependencies\n');
+                parts.push('3. **Maintain Consistency**: Follow existing code style and conventions\n');
+                parts.push('4. **Reference Precisely**: Always cite specific file paths\n');
+                parts.push('5. **Think Holistically**: Consider the entire project ecosystem\n');
+                parts.push('6. **Respect Patterns**: Honor established design patterns and practices\n\n');
+                
+                parts.push('**📝 Data Format:**\n\n');
+                parts.push('- Each file includes full path and language identifier\n');
+                parts.push('- Project structure provided for navigation\n');
+                parts.push('- All content is unmodified source code\n');
+                parts.push('- Syntax highlighting applied per language\n\n');
+                
+                parts.push('═'.repeat(80) + '\n');
+                parts.push('## 🗂️ PROJECT STRUCTURE\n\n');
+                parts.push('```\n', struct, '```\n\n');
+                parts.push('═'.repeat(80) + '\n');
+                parts.push('## 📦 FILE CONTENTS\n\n');
             }
             // Binary files are intentionally excluded from the generated output (they remain visible in the tree)
             // Build document sections faster - no UI updates during build
@@ -1521,34 +1635,147 @@
     };
 
     const genAndDL = async (struct, textFiles, binaryFiles) => {
+        // Gather metadata
+        const now = new Date();
+        const timestamp = now.toISOString();
+        const formattedDate = now.toLocaleString('en-US', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', 
+            hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' 
+        });
+        const totalFiles = textFiles.length;
+        const totalSize = textFiles.reduce((s, f) => s + f.size, 0);
+        const estimatedTokens = Math.ceil(totalSize / 4);
+        
+        // Get language statistics
+        const langStats = {};
+        textFiles.forEach(f => {
+            const ext = f.name.split('.').pop().toUpperCase();
+            langStats[ext] = (langStats[ext] || 0) + 1;
+        });
+        const languageList = Object.entries(langStats)
+            .sort((a, b) => b[1] - a[1])
+            .map(([lang, count]) => `${lang} (${count} file${count > 1 ? 's' : ''})`)
+            .join(', ');
+        
         const parts = [];
         
         // Add model-specific headers for download
         if (S.model === 'gpt') {
-            parts.push('# Project Context for GPT-4\n\n');
-            parts.push('## Instructions\n');
-            parts.push('You are being provided with a complete codebase context. Please:\n');
-            parts.push('- Analyze the code structure and architecture\n');
-            parts.push('- Understand dependencies between files\n');
-            parts.push('- Maintain consistency with existing code patterns\n');
-            parts.push('- Reference specific files when answering questions\n\n');
-            parts.push('## Project Structure\n```\n', struct, '```\n\n');
-            parts.push('## Source Files\n\n');
+            parts.push('# 🤖 PROJECT CONTEXT FOR GPT-4\n');
+            parts.push('='.repeat(80) + '\n\n');
+            
+            parts.push('## 📋 METADATA\n');
+            parts.push(`**Generated:** ${formattedDate}\n`);
+            parts.push(`**Timestamp:** ${timestamp}\n`);
+            parts.push(`**Project Root:** ${S.root}\n`);
+            parts.push(`**Total Files:** ${totalFiles.toLocaleString()}\n`);
+            parts.push(`**Total Size:** ${bytes(totalSize)}\n`);
+            parts.push(`**Estimated Tokens:** ~${estimatedTokens.toLocaleString()}\n`);
+            parts.push(`**Languages Used:** ${languageList}\n\n`);
+            
+            parts.push('## 🎯 SYSTEM PROMPT\n');
+            parts.push('```\n');
+            parts.push('You are an expert software engineer analyzing a complete codebase.\n\n');
+            parts.push('INSTRUCTIONS:\n');
+            parts.push('- Treat this as the COMPLETE and AUTHORITATIVE source of truth for this project\n');
+            parts.push('- Analyze the code structure, architecture, and design patterns\n');
+            parts.push('- Understand dependencies and relationships between files\n');
+            parts.push('- Maintain consistency with existing code patterns and conventions\n');
+            parts.push('- Always reference specific file paths when discussing code\n');
+            parts.push('- Consider the project holistically before making suggestions\n');
+            parts.push('- Respect the established coding style and naming conventions\n\n');
+            parts.push('DATA FORMAT:\n');
+            parts.push('- Each file is presented with its full path and language\n');
+            parts.push('- Code blocks use appropriate syntax highlighting\n');
+            parts.push('- The project structure is provided first for context\n');
+            parts.push('```\n\n');
+            
+            parts.push('## 📁 PROJECT STRUCTURE\n```\n', struct, '```\n\n');
+            parts.push('='.repeat(80) + '\n');
+            parts.push('## 📄 SOURCE FILES\n');
+            parts.push('='.repeat(80) + '\n\n');
         } else if (S.model === 'claude') {
-            parts.push('# Codebase Context for Claude\n\n');
-            parts.push('<context>\n');
-            parts.push('<purpose>\n');
-            parts.push('This is a complete project codebase provided for analysis, code review, or implementation tasks.\n');
-            parts.push('Please analyze the architecture, patterns, and maintain consistency when making changes.\n');
-            parts.push('</purpose>\n\n');
+            parts.push('<codebase_context>\n\n');
+            
+            parts.push('<metadata>\n');
+            parts.push(`  <generated_at>${timestamp}</generated_at>\n`);
+            parts.push(`  <formatted_date>${formattedDate}</formatted_date>\n`);
+            parts.push(`  <project_root>${S.root}</project_root>\n`);
+            parts.push(`  <statistics>\n`);
+            parts.push(`    <total_files>${totalFiles}</total_files>\n`);
+            parts.push(`    <total_size>${bytes(totalSize)}</total_size>\n`);
+            parts.push(`    <estimated_tokens>${estimatedTokens}</estimated_tokens>\n`);
+            parts.push(`  </statistics>\n`);
+            parts.push(`  <languages>\n`);
+            Object.entries(langStats).sort((a, b) => b[1] - a[1]).forEach(([lang, count]) => {
+                parts.push(`    <language name="${lang}" count="${count}" />\n`);
+            });
+            parts.push(`  </languages>\n`);
+            parts.push('</metadata>\n\n');
+            
+            parts.push('<system_prompt>\n');
+            parts.push('  <role>Expert Software Engineer</role>\n');
+            parts.push('  <task>Analyze and work with this complete codebase</task>\n');
+            parts.push('  <instructions>\n');
+            parts.push('    - This is the COMPLETE and AUTHORITATIVE codebase\n');
+            parts.push('    - Analyze architecture, patterns, and code organization\n');
+            parts.push('    - Understand file dependencies and relationships\n');
+            parts.push('    - Maintain existing code style and conventions\n');
+            parts.push('    - Reference specific file paths in your responses\n');
+            parts.push('    - Think holistically about the entire project\n');
+            parts.push('    - Respect established patterns and best practices\n');
+            parts.push('  </instructions>\n');
+            parts.push('  <data_format>\n');
+            parts.push('    - Files are in XML format with path and language metadata\n');
+            parts.push('    - Project structure provided first for navigation\n');
+            parts.push('    - All file contents are complete and unmodified\n');
+            parts.push('  </data_format>\n');
+            parts.push('</system_prompt>\n\n');
+            
             parts.push('<project_structure>\n', struct, '</project_structure>\n\n');
             parts.push('<source_files>\n');
         } else if (S.model === 'gemini') {
-            parts.push('# Complete Project Context for Gemini\n\n');
-            parts.push('## Overview\n');
-            parts.push('Complete codebase with file structure and contents for analysis and development tasks.\n\n');
-            parts.push('## Directory Structure\n```\n', struct, '```\n\n');
-            parts.push('## File Contents\n\n');
+            parts.push('# 🚀 COMPLETE PROJECT CONTEXT FOR GEMINI\n');
+            parts.push('═'.repeat(80) + '\n\n');
+            
+            parts.push('## 📊 PROJECT METADATA\n\n');
+            parts.push('| **Attribute** | **Value** |\n');
+            parts.push('|---------------|-----------|\n');
+            parts.push(`| Generated | ${formattedDate} |\n`);
+            parts.push(`| ISO Timestamp | ${timestamp} |\n`);
+            parts.push(`| Project Root | \`${S.root}\` |\n`);
+            parts.push(`| Total Files | ${totalFiles.toLocaleString()} |\n`);
+            parts.push(`| Total Size | ${bytes(totalSize)} |\n`);
+            parts.push(`| Estimated Tokens | ~${estimatedTokens.toLocaleString()} |\n\n`);
+            
+            parts.push('### 🔤 Languages Distribution\n\n');
+            Object.entries(langStats).sort((a, b) => b[1] - a[1]).forEach(([lang, count]) => {
+                const percentage = ((count / totalFiles) * 100).toFixed(1);
+                parts.push(`- **${lang}**: ${count} file${count > 1 ? 's' : ''} (${percentage}%)\n`);
+            });
+            parts.push('\n');
+            
+            parts.push('## 🧠 SYSTEM PROMPT & INSTRUCTIONS\n\n');
+            parts.push('> **Role**: Expert Software Engineer and Code Analyst\n\n');
+            parts.push('**📌 Key Instructions:**\n\n');
+            parts.push('1. **Complete Context**: This is the FULL and AUTHORITATIVE codebase\n');
+            parts.push('2. **Analyze Thoroughly**: Understand architecture, patterns, and dependencies\n');
+            parts.push('3. **Maintain Consistency**: Follow existing code style and conventions\n');
+            parts.push('4. **Reference Precisely**: Always cite specific file paths\n');
+            parts.push('5. **Think Holistically**: Consider the entire project ecosystem\n');
+            parts.push('6. **Respect Patterns**: Honor established design patterns and practices\n\n');
+            
+            parts.push('**📝 Data Format:**\n\n');
+            parts.push('- Each file includes full path and language identifier\n');
+            parts.push('- Project structure provided for navigation\n');
+            parts.push('- All content is unmodified source code\n');
+            parts.push('- Syntax highlighting applied per language\n\n');
+            
+            parts.push('═'.repeat(80) + '\n');
+            parts.push('## 🗂️ PROJECT STRUCTURE\n\n');
+            parts.push('```\n', struct, '```\n\n');
+            parts.push('═'.repeat(80) + '\n');
+            parts.push('## 📦 FILE CONTENTS\n\n');
         }
 
         let done = 0;
