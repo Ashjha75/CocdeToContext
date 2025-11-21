@@ -1998,6 +1998,59 @@
                 toast(`Template: ${S.model.toUpperCase()}`, 'info');
             });
         }
+        
+        // Drag and Drop functionality
+        const dragDropZone = $('dragDropZone');
+        const dragDropOverlay = $('dragDropOverlay');
+        
+        if (dragDropZone) {
+            // Prevent default drag behaviors on the entire zone
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dragDropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+            
+            // Highlight drop zone when dragging over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dragDropZone.addEventListener(eventName, () => {
+                    dragDropZone.classList.add('drag-over');
+                }, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dragDropZone.addEventListener(eventName, () => {
+                    dragDropZone.classList.remove('drag-over');
+                }, false);
+            });
+            
+            // Handle dropped files
+            dragDropZone.addEventListener('drop', e => {
+                const items = e.dataTransfer.items;
+                if (!items || items.length === 0) return;
+                
+                // Check if folder was dropped (check webkitdirectory support)
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    // Show loader IMMEDIATELY
+                    load(true, 'Loading dropped files...');
+                    // Process files in next tick to let loader render
+                    setTimeout(() => loadFiles(files), 0);
+                } else {
+                    toast('Please drop a folder, not individual files', 'warning');
+                }
+            }, false);
+            
+            // Click on zone to trigger folder selection
+            dragDropZone.addEventListener('click', e => {
+                // Don't trigger if clicking the button itself
+                if (!e.target.closest('.btn-select-dir')) {
+                    if (D.sel) D.sel.click();
+                }
+            });
+        }
+        
         // Optimize file input change handler
         inp.onchange = e => {
             if (!e.target.files.length) return;
