@@ -1194,20 +1194,59 @@
             const parts = [];
             // === AI Model Template Logic ===
             if (S.model === 'gpt') {
-                parts.push('### GPT-4 CONTEXT TEMPLATE\n');
+                parts.push('# Project Context for GPT-4\n\n');
+                parts.push('## Instructions\n');
+                parts.push('You are being provided with a complete codebase context. Please:\n');
+                parts.push('- Analyze the code structure and architecture\n');
+                parts.push('- Understand dependencies between files\n');
+                parts.push('- Maintain consistency with existing code patterns\n');
+                parts.push('- Reference specific files when answering questions\n\n');
+                parts.push('## Project Structure\n```\n', struct, '```\n\n');
+                parts.push('## Source Files\n\n');
             } else if (S.model === 'claude') {
-                parts.push('### CLAUDE CONTEXT TEMPLATE\n');
+                parts.push('# Codebase Context for Claude\n\n');
+                parts.push('<context>\n');
+                parts.push('<purpose>\n');
+                parts.push('This is a complete project codebase provided for analysis, code review, or implementation tasks.\n');
+                parts.push('Please analyze the architecture, patterns, and maintain consistency when making changes.\n');
+                parts.push('</purpose>\n\n');
+                parts.push('<project_structure>\n', struct, '</project_structure>\n\n');
+                parts.push('<source_files>\n');
             } else if (S.model === 'gemini') {
-                parts.push('### GEMINI CONTEXT TEMPLATE\n');
+                parts.push('# Complete Project Context for Gemini\n\n');
+                parts.push('## Overview\n');
+                parts.push('Complete codebase with file structure and contents for analysis and development tasks.\n\n');
+                parts.push('## Directory Structure\n```\n', struct, '```\n\n');
+                parts.push('## File Contents\n\n');
             }
-            parts.push('<folder-structure>\n', struct, '</folder-structure>\n');
             // Binary files are intentionally excluded from the generated output (they remain visible in the tree)
             // Build document sections faster - no UI updates during build
             contents.forEach(({ path, content }) => {
                 const full = getFullPath(path);
-                parts.push(`=== FILE: ${full} ===\n`);
-                parts.push(`<document path=\"${path}\">\n`, content, '\n</document>\n');
+                const ext = path.split('.').pop().toLowerCase();
+                
+                if (S.model === 'gpt') {
+                    // GPT-4 format: Clear markdown with code blocks
+                    parts.push(`### ${full}\n`);
+                    parts.push('```', ext, '\n', content, '\n```\n\n');
+                } else if (S.model === 'claude') {
+                    // Claude format: XML-style with clear metadata
+                    parts.push(`<file path="${full}">\n`);
+                    parts.push(`<language>${ext}</language>\n`);
+                    parts.push(`<content>\n${content}\n</content>\n`);
+                    parts.push('</file>\n\n');
+                } else if (S.model === 'gemini') {
+                    // Gemini format: Structured with clear delimiters
+                    parts.push(`## File: ${full}\n`);
+                    parts.push(`**Language:** ${ext}\n\n`);
+                    parts.push('```', ext, '\n', content, '\n```\n\n');
+                }
             });
+            
+            // Add closing tags for Claude
+            if (S.model === 'claude') {
+                parts.push('</source_files>\n</context>\n');
+            }
 
             let ctx;
             try {
@@ -1256,7 +1295,34 @@
 
     const genAndDL = async (struct, textFiles, binaryFiles) => {
         const parts = [];
-        parts.push('<folder-structure>\n', struct, '</folder-structure>\n');
+        
+        // Add model-specific headers for download
+        if (S.model === 'gpt') {
+            parts.push('# Project Context for GPT-4\n\n');
+            parts.push('## Instructions\n');
+            parts.push('You are being provided with a complete codebase context. Please:\n');
+            parts.push('- Analyze the code structure and architecture\n');
+            parts.push('- Understand dependencies between files\n');
+            parts.push('- Maintain consistency with existing code patterns\n');
+            parts.push('- Reference specific files when answering questions\n\n');
+            parts.push('## Project Structure\n```\n', struct, '```\n\n');
+            parts.push('## Source Files\n\n');
+        } else if (S.model === 'claude') {
+            parts.push('# Codebase Context for Claude\n\n');
+            parts.push('<context>\n');
+            parts.push('<purpose>\n');
+            parts.push('This is a complete project codebase provided for analysis, code review, or implementation tasks.\n');
+            parts.push('Please analyze the architecture, patterns, and maintain consistency when making changes.\n');
+            parts.push('</purpose>\n\n');
+            parts.push('<project_structure>\n', struct, '</project_structure>\n\n');
+            parts.push('<source_files>\n');
+        } else if (S.model === 'gemini') {
+            parts.push('# Complete Project Context for Gemini\n\n');
+            parts.push('## Overview\n');
+            parts.push('Complete codebase with file structure and contents for analysis and development tasks.\n\n');
+            parts.push('## Directory Structure\n```\n', struct, '```\n\n');
+            parts.push('## File Contents\n\n');
+        }
 
         let done = 0;
         const FAST_BATCH = 100;
@@ -1292,8 +1358,23 @@
                         return;
                     }
                     
-                    parts.push('=== FILE: ' + getFullPath(p) + ' ===\n');
-                    parts.push('<document path="' + p + '">\n', content, '\n</document>\n');
+                    // Format based on selected AI model
+                    const full = getFullPath(p);
+                    const ext = p.split('.').pop().toLowerCase();
+                    
+                    if (S.model === 'gpt') {
+                        parts.push(`### ${full}\n`);
+                        parts.push('```', ext, '\n', content, '\n```\n\n');
+                    } else if (S.model === 'claude') {
+                        parts.push(`<file path="${full}">\n`);
+                        parts.push(`<language>${ext}</language>\n`);
+                        parts.push(`<content>\n${content}\n</content>\n`);
+                        parts.push('</file>\n\n');
+                    } else if (S.model === 'gemini') {
+                        parts.push(`## File: ${full}\n`);
+                        parts.push(`**Language:** ${ext}\n\n`);
+                        parts.push('```', ext, '\n', content, '\n```\n\n');
+                    }
                     
                     const sFileIndex = S.files.findIndex(sf => sf.path === p);
                     if (sFileIndex !== -1) {
