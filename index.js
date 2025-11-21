@@ -2040,62 +2040,68 @@
                     return;
                 }
                 
-                // Hide drag-drop zone and show editor
-                dragDropZone.style.display = 'none';
-                if (codeEditor) codeEditor.style.display = 'block';
-                
                 // Show loader IMMEDIATELY
                 load(true, 'Processing dropped folder...');
                 
-                // Process dropped items
-                const allFiles = [];
-                
-                // Use webkitGetAsEntry for folder support
-                for (let i = 0; i < items.length; i++) {
-                    const item = items[i].webkitGetAsEntry();
-                    if (item) {
-                        if (item.isDirectory) {
-                            await traverseDirectory(item, '', allFiles);
-                        } else if (item.isFile) {
-                            const file = items[i].getAsFile();
-                            if (file) {
-                                // Add webkitRelativePath property
-                                Object.defineProperty(file, 'webkitRelativePath', {
-                                    value: file.name,
-                                    writable: false
-                                });
-                                allFiles.push(file);
+                try {
+                    // Process dropped items
+                    const allFiles = [];
+                    
+                    // Use webkitGetAsEntry for folder support
+                    for (let i = 0; i < items.length; i++) {
+                        const item = items[i].webkitGetAsEntry();
+                        if (item) {
+                            if (item.isDirectory) {
+                                await traverseDirectory(item, '', allFiles);
+                            } else if (item.isFile) {
+                                const file = items[i].getAsFile();
+                                if (file) {
+                                    // Add webkitRelativePath property
+                                    Object.defineProperty(file, 'webkitRelativePath', {
+                                        value: file.name,
+                                        writable: false
+                                    });
+                                    allFiles.push(file);
+                                }
                             }
                         }
                     }
-                }
-                
-                if (allFiles.length === 0) {
-                    toast('No files found in dropped folder', 'warning');
-                    load(false);
-                    dragDropZone.style.display = 'flex';
-                    if (codeEditor) codeEditor.style.display = 'none';
-                    return;
-                }
-                
-                // Create a FileList-like object
-                const fileList = {
-                    length: allFiles.length,
-                    item: i => allFiles[i],
-                    [Symbol.iterator]: function* () {
-                        for (let i = 0; i < allFiles.length; i++) {
-                            yield allFiles[i];
-                        }
+                    
+                    console.log('Files collected:', allFiles.length);
+                    
+                    if (allFiles.length === 0) {
+                        toast('No files found in dropped folder', 'warning');
+                        load(false);
+                        return;
                     }
-                };
-                
-                // Add array access
-                allFiles.forEach((file, idx) => {
-                    fileList[idx] = file;
-                });
-                
-                // Process files
-                setTimeout(() => loadFiles(fileList), 0);
+                    
+                    // Hide drag-drop zone and show editor
+                    dragDropZone.style.display = 'none';
+                    if (codeEditor) codeEditor.style.display = 'block';
+                    
+                    // Create a FileList-like object
+                    const fileList = {
+                        length: allFiles.length,
+                        item: i => allFiles[i],
+                        [Symbol.iterator]: function* () {
+                            for (let i = 0; i < allFiles.length; i++) {
+                                yield allFiles[i];
+                            }
+                        }
+                    };
+                    
+                    // Add array access
+                    allFiles.forEach((file, idx) => {
+                        fileList[idx] = file;
+                    });
+                    
+                    // Process files
+                    loadFiles(fileList);
+                } catch (err) {
+                    console.error('Error processing drop:', err);
+                    toast('Error processing dropped folder: ' + err.message, 'error');
+                    load(false);
+                }
             }, false);
             
             // Recursive function to traverse directory structure
@@ -2156,6 +2162,15 @@
             dragDropZone.addEventListener('click', () => {
                 if (D.sel) D.sel.click();
             });
+        }
+        
+        // IMPORTANT: Drag-drop doesn't work reliably with folders in all browsers
+        // Show a warning message
+        if (dragDropZone) {
+            const dragHint = dragDropZone.querySelector('.drag-drop-hint span:last-child');
+            if (dragHint) {
+                dragHint.textContent = 'Note: For best results, use "Select Directory" button';
+            }
         }
         
         // Optimize file input change handler
