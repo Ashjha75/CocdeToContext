@@ -907,7 +907,11 @@
     function getTreeLines(parents, isLast) {
         let lines = '';
         for (let i = 0; i < parents.length; ++i) {
-            lines += `<span class="tree-vline" style="visibility:${parents[i] ? 'visible' : 'hidden'}"></span>`;
+            if (parents[i]) {
+                lines += `<span class="tree-vline"></span>`;
+            } else {
+                lines += `<span class="tree-vline" style="opacity:0"></span>`;
+            }
         }
         if (parents.length > 0) {
             lines += `<span class="tree-branch${isLast ? ' tree-branch-last' : ''}"></span>`;

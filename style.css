@@ -40,41 +40,36 @@
     margin-right: 8px;
     margin-bottom: 2px;
 }
-/* Tree lines and arrows */
 /* Tree lines and arrows (VS Code style) */
 .tree-lines {
-    display: inline-block;
-    min-width: 0.7em;
-    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    margin-right: 2px;
     user-select: none;
-    letter-spacing: -0.1em;
 }
 .tree-vline {
     display: inline-block;
-    width: 1.5px;
+    width: 1px;
     height: 22px;
-    background: #444;
-    margin-right: 2px;
-    margin-left: 0;
-    border-radius: 1px;
-    position: relative;
-    top: 2px;
+    background: #4a4a4a;
+    margin: 0 7.5px;
+    flex-shrink: 0;
 }
 .tree-branch {
-    width: 16px;
-    height: 22px;
-    background: none;
-    border-left: 2px solid #444;
-    border-bottom: 2px solid #444;
-    border-radius: 0 0 0 2px;
-    margin-right: 2px;
-    margin-left: -2px;
-    position: relative;
-    top: 2px;
-    left: -2px;
+    display: inline-block;
+    width: 8px;
+    height: 11px;
+    border-left: 1px solid #4a4a4a;
+    border-bottom: 1px solid #4a4a4a;
+    margin: 0 7.5px 0 0;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: -11px;
 }
 .tree-branch-last {
-    border-left: 2px solid transparent !important;
+    height: 11px;
+    border-left: 1px solid #4a4a4a !important;
 }
 .tree-arrow {
     width: 14px;
