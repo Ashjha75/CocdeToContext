@@ -885,17 +885,41 @@
     // ============================================================================
     // VIRTUAL RENDERING - Only render visible items
     // ============================================================================
-    const render = (nodes, lv = 0, acc = []) => {
-        if (acc.length > MAX_RENDER) return acc; // Stop if too many
-        nodes.forEach(nd => {
+    // Helper to build tree lines array for each node
+    function getTreeLines(parents, isLast) {
+        let lines = '';
+        for (let i = 0; i < parents.length; ++i) {
+            lines += `<span class="tree-vline" style="visibility:${parents[i] ? 'visible' : 'hidden'}"></span>`;
+        }
+        // For the current node, add a connector (├ or └)
+        if (parents.length > 0) {
+            lines += `<span class="tree-vline tree-branch" style="height:22px;${isLast ? 'border-left:2px solid transparent;' : ''}"></span>`;
+        }
+        return lines;
+    }
+
+    const render = (nodes, lv = 0, acc = [], parents = []) => {
+        if (acc.length > MAX_RENDER) return acc;
+        nodes.forEach((nd, idx) => {
             const ic = ico(nd.n, nd.t === 'd');
             const has = nd.t === 'd' && nd.kids.size > 0;
             const sz = nd.f ? bytes(nd.f.size) : '';
+            const isLast = idx === nodes.length - 1;
+            // Tree lines
+            const lines = getTreeLines(parents, isLast);
+            // Arrow SVGs
+            let arrow = '';
+            if (has) {
+                arrow = `<img class="tree-arrow" src="public/arrowRight.svg" data-arrow="right" style="display:inline;" />`;
+            } else {
+                arrow = `<span class="tree-arrow-placeholder"></span>`;
+            }
             acc.push({
-                html: `<div class="tree-item ${nd.ig ? 'ignored' : ''}" data-path="${nd.full}">
+                html: `<div class="tree-item${nd.ig ? ' ignored' : ''}${has ? ' folder' : ''}" data-path="${nd.full}">
                     <div class="tree-item-content" data-level="${lv}">
+                        <span class="tree-lines">${lines}</span>
                         <button class="expand-btn" style="visibility:${has ? 'visible' : 'hidden'}">
-                            <span class="material-symbols-outlined">chevron_right</span>
+                            ${arrow}
                         </button>
                         <div class="file-icon ${ic.cls}">
                             <img src="${ic.url}" alt="${nd.n}" class="vscode-icon" onerror="this.style.display='none'" />
@@ -906,13 +930,14 @@
                         </label>
                         ${sz ? `<span class="file-size">${sz}</span>` : ''}
                     </div>
-                    ${has ? `<div class="tree-children">${renderSub(Array.from(nd.kids.values()), lv + 1)}</div>` : ''}
+                    ${has ? `<div class="tree-children">${renderSub(Array.from(nd.kids.values()), lv + 1, parents.concat(!isLast))}</div>` : ''}
                 </div>`
             });
         });
         return acc;
     };
-    const renderSub = (nodes, lv) => render(nodes, lv, []).map(x => x.html).join('');
+    // Pass parents array for lines
+    const renderSub = (nodes, lv, parents) => render(nodes, lv, [], parents).map(x => x.html).join('');
     // ============================================================================
     // FILE LOADING - ASYNC CHUNKS (ENHANCED FILTERING & UI UPDATE)
     // ============================================================================
@@ -1380,10 +1405,14 @@
             if (btn) {
                 const item = btn.closest('.tree-item');
                 const kids = item.querySelector('.tree-children');
+                const arrowImg = btn.querySelector('.tree-arrow');
                 if (kids) {
                     const open = kids.classList.toggle('open');
                     btn.classList.toggle('expanded', open);
-                    btn.querySelector('.material-symbols-outlined').textContent = open ? 'expand_more' : 'chevron_right';
+                    if (arrowImg) {
+                        arrowImg.src = open ? 'public/arrowDown.svg' : 'public/arrowRight.svg';
+                        arrowImg.setAttribute('data-arrow', open ? 'down' : 'right');
+                    }
                 }
                 return;
             }
