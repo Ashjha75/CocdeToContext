@@ -83,20 +83,11 @@
                     <small class="search-meta" id="searchMeta">Search file and folder names (case-insensitive)</small>
                 </div>
 
-                <div class="drag-drop-zone" id="dragDropZone">
-                    <div class="drag-drop-content">
-                        <span class="material-symbols-outlined drag-drop-icon">folder_open</span>
-                        <h4>Drag & Drop Folder Here</h4>
-                        <p>or</p>
-                        <button class="btn-select-dir" id="selectDirBtn">
-                            <img src="public/folder.svg" alt="Select Directory" class="sidebar-btn-icon" />
-                            Browse Folder
-                        </button>
-                    </div>
-                    <div class="drag-drop-overlay" id="dragDropOverlay">
-                        <span class="material-symbols-outlined drag-drop-icon-large">cloud_upload</span>
-                        <h3>Drop folder to load</h3>
-                    </div>
+                <div class="sidebar-select">
+                    <button class="btn-select-dir" id="selectDirBtn">
+                        <img src="public/folder.svg" alt="Select Directory" class="sidebar-btn-icon" />
+                        Select Directory
+                    </button>
                 </div>
 
                 <div class="sidebar-select">
@@ -170,7 +161,23 @@
                     </div>
 
                     <div class="editor-content">
-                        <div class="code-editor" id="codeEditor">
+                        <div class="drag-drop-zone-main" id="dragDropZone">
+                            <div class="drag-drop-content-main">
+                                <span class="material-symbols-outlined drag-drop-icon-main">folder_open</span>
+                                <h2>Drag & Drop Your Project Folder Here</h2>
+                                <p>or click "Select Directory" in the sidebar</p>
+                                <div class="drag-drop-hint">
+                                    <span class="material-symbols-outlined">info</span>
+                                    <span>Drop your entire project folder to get started</span>
+                                </div>
+                            </div>
+                            <div class="drag-drop-overlay-main" id="dragDropOverlay">
+                                <span class="material-symbols-outlined drag-drop-icon-large-main">cloud_upload</span>
+                                <h2>Drop Your Folder Now</h2>
+                                <p>Release to load files</p>
+                            </div>
+                        </div>
+                        <div class="code-editor" id="codeEditor" style="display: none;">
                             <div class="editor-placeholder">
                                 <span class="material-symbols-outlined">code_blocks</span>
                                 <p>Your generated context will appear here</p>

@@ -1999,14 +1999,15 @@
             });
         }
         
-        // Drag and Drop functionality
+        // Drag and Drop functionality on main content area
         const dragDropZone = $('dragDropZone');
         const dragDropOverlay = $('dragDropOverlay');
+        const codeEditor = $('codeEditor');
         
         if (dragDropZone) {
-            // Prevent default drag behaviors on the entire zone
+            // Prevent default drag behaviors on the entire document
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dragDropZone.addEventListener(eventName, e => {
+                document.addEventListener(eventName, e => {
                     e.preventDefault();
                     e.stopPropagation();
                 }, false);
@@ -2019,41 +2020,51 @@
                 }, false);
             });
             
-            ['dragleave', 'drop'].forEach(eventName => {
-                dragDropZone.addEventListener(eventName, () => {
-                    dragDropZone.classList.remove('drag-over');
+            // Remove highlight when leaving or dropping
+            ['dragleave'].forEach(eventName => {
+                dragDropZone.addEventListener(eventName, e => {
+                    // Only remove if leaving the drop zone itself, not child elements
+                    if (e.target === dragDropZone) {
+                        dragDropZone.classList.remove('drag-over');
+                    }
                 }, false);
             });
             
             // Handle dropped files
-            dragDropZone.addEventListener('drop', e => {
-                const items = e.dataTransfer.items;
-                if (!items || items.length === 0) return;
+            document.addEventListener('drop', e => {
+                dragDropZone.classList.remove('drag-over');
                 
-                // Check if folder was dropped (check webkitdirectory support)
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
+                    // Hide drag-drop zone and show editor
+                    dragDropZone.style.display = 'none';
+                    if (codeEditor) codeEditor.style.display = 'block';
+                    
                     // Show loader IMMEDIATELY
                     load(true, 'Loading dropped files...');
                     // Process files in next tick to let loader render
                     setTimeout(() => loadFiles(files), 0);
                 } else {
-                    toast('Please drop a folder, not individual files', 'warning');
+                    toast('Please drop a folder with files', 'warning');
                 }
             }, false);
             
             // Click on zone to trigger folder selection
-            dragDropZone.addEventListener('click', e => {
-                // Don't trigger if clicking the button itself
-                if (!e.target.closest('.btn-select-dir')) {
-                    if (D.sel) D.sel.click();
-                }
+            dragDropZone.addEventListener('click', () => {
+                if (D.sel) D.sel.click();
             });
         }
         
         // Optimize file input change handler
         inp.onchange = e => {
             if (!e.target.files.length) return;
+            
+            // Hide drag-drop zone and show editor when files are selected
+            const dragDropZone = $('dragDropZone');
+            const codeEditor = $('codeEditor');
+            if (dragDropZone) dragDropZone.style.display = 'none';
+            if (codeEditor) codeEditor.style.display = 'block';
+            
             // Show loader IMMEDIATELY
             load(true, 'Loading files...');
             // Process files in next tick to let loader render

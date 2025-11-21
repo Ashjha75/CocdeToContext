@@ -480,103 +480,142 @@ html, body {
     line-height: 1.2;
 }
 
-/* Drag and Drop Zone */
-.drag-drop-zone {
+/* Main Content Drag and Drop Zone */
+.drag-drop-zone-main {
     position: relative;
-    margin: 12px 12px 8px 12px;
-    border: 2px dashed var(--border-color);
-    border-radius: 8px;
-    padding: 24px 16px;
-    background: rgba(255, 255, 255, 0.02);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-darker);
+    border: 3px dashed var(--border-color);
+    border-radius: 12px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    flex-shrink: 0;
+    overflow: hidden;
 }
 
-.drag-drop-zone:hover {
+.drag-drop-zone-main:hover {
     border-color: var(--color-accent);
-    background: rgba(251, 191, 36, 0.05);
+    background: rgba(251, 191, 36, 0.03);
 }
 
-.drag-drop-zone.drag-over {
+.drag-drop-zone-main.drag-over {
     border-color: var(--color-accent);
-    background: rgba(251, 191, 36, 0.1);
+    background: rgba(251, 191, 36, 0.08);
     border-style: solid;
-    transform: scale(1.02);
+    border-width: 4px;
+    transform: scale(0.99);
 }
 
-.drag-drop-content {
+.drag-drop-content-main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 16px;
     z-index: 1;
     position: relative;
+    padding: 48px;
+    text-align: center;
+    max-width: 600px;
 }
 
-.drag-drop-icon {
-    font-size: 48px;
+.drag-drop-icon-main {
+    font-size: 120px;
     color: var(--color-accent);
-    opacity: 0.8;
+    opacity: 0.7;
+    animation: float 3s ease-in-out infinite;
 }
 
-.drag-drop-content h4 {
+.drag-drop-content-main h2 {
     margin: 0;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
     color: var(--text-primary);
+    letter-spacing: -0.5px;
 }
 
-.drag-drop-content p {
-    margin: 4px 0;
-    font-size: 12px;
+.drag-drop-content-main > p {
+    margin: 0;
+    font-size: 16px;
     color: var(--text-secondary);
 }
 
-.drag-drop-content .btn-select-dir {
-    margin: 8px 0 0 0;
-    width: auto;
-    padding: 8px 16px;
-    font-size: 12px;
+.drag-drop-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: 6px;
+    margin-top: 8px;
 }
 
-.drag-drop-overlay {
+.drag-drop-hint .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--color-accent);
+}
+
+.drag-drop-hint span:last-child {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.drag-drop-overlay-main {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(251, 191, 36, 0.15);
-    backdrop-filter: blur(4px);
-    border-radius: 6px;
+    background: rgba(251, 191, 36, 0.2);
+    backdrop-filter: blur(8px);
     display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 16px;
     z-index: 10;
     pointer-events: none;
 }
 
-.drag-drop-zone.drag-over .drag-drop-overlay {
+.drag-drop-zone-main.drag-over .drag-drop-overlay-main {
     display: flex;
 }
 
-.drag-drop-icon-large {
-    font-size: 64px;
+.drag-drop-icon-large-main {
+    font-size: 120px;
     color: var(--color-accent);
-    animation: bounce 0.6s ease infinite;
+    animation: bounceScale 0.6s ease infinite;
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
 }
 
-.drag-drop-overlay h3 {
-    margin: 8px 0 0 0;
+.drag-drop-overlay-main h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-accent);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.drag-drop-overlay-main p {
+    margin: 0;
     font-size: 16px;
-    font-weight: 600;
-    color: var(--color-accent);
+    color: var(--text-primary);
 }
 
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes bounceScale {
+    0%, 100% { 
+        transform: translateY(0) scale(1); 
+    }
+    50% { 
+        transform: translateY(-20px) scale(1.1); 
+    }
 }
 
 .sidebar-select {
