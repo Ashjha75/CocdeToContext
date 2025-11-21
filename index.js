@@ -1159,22 +1159,27 @@
         const items = document.querySelectorAll('.tree-item');
         let matches = 0;
         const total = items.length;
+        
         items.forEach(item => {
             const nameEl = item.querySelector('.file-name');
             const name = nameEl ? nameEl.textContent.toLowerCase() : '';
-            const path = (item.dataset.path || '').toLowerCase();
-            const match = !term || name.includes(term) || path.includes(term);
+            
+            // Only search by name, support partial matching
+            const match = !term || name.includes(term);
+            
             item.style.display = match ? '' : 'none';
             item.classList.toggle('search-match', !!term && match);
+            
             if (term && match) {
                 matches += 1;
                 openTreeParents(item);
             }
         });
+        
         if (D.searchMeta) {
             D.searchMeta.textContent = term
                 ? `${matches} match${matches === 1 ? '' : 'es'} of ${total}`
-                : 'Search file and folder names (case-insensitive)';
+                : 'Search by file or folder name (partial match supported)';
         }
         if (D.searchClear) {
             D.searchClear.hidden = !term;
