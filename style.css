@@ -44,46 +44,69 @@
 .tree-lines {
     display: inline-flex;
     align-items: center;
-    height: 22px;
-    margin-right: 2px;
+    margin-right: 4px;
     user-select: none;
+    gap: 0;
 }
 .tree-vline {
     display: inline-block;
+    width: 16px;
+    height: 22px;
+    position: relative;
+    flex-shrink: 0;
+}
+.tree-vline::after {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
     width: 1px;
     height: 22px;
-    background: #4a4a4a;
-    margin: 0 7.5px;
-    flex-shrink: 0;
+    background: #3e3e3e;
 }
 .tree-branch {
     display: inline-block;
-    width: 8px;
-    height: 11px;
-    border-left: 1px solid #4a4a4a;
-    border-bottom: 1px solid #4a4a4a;
-    margin: 0 7.5px 0 0;
+    width: 16px;
+    height: 22px;
+    position: relative;
     flex-shrink: 0;
-    align-self: flex-start;
-    margin-top: -11px;
 }
-.tree-branch-last {
+.tree-branch::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
+    width: 1px;
     height: 11px;
-    border-left: 1px solid #4a4a4a !important;
+    background: #3e3e3e;
+}
+.tree-branch::after {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 11px;
+    width: 8px;
+    height: 1px;
+    background: #3e3e3e;
+}
+.tree-branch-last::before {
+    display: none;
 }
 .tree-arrow {
-    width: 14px;
-    height: 14px;
-    vertical-align: middle;
-    margin-right: 2px;
+    width: 16px;
+    height: 16px;
+    display: block;
     transition: none;
-    display: inline-block;
+    cursor: pointer;
+    opacity: 0.8;
+}
+.tree-arrow:hover {
+    opacity: 1;
 }
 .tree-arrow-placeholder {
     display: inline-block;
-    width: 14px;
-    height: 14px;
-    margin-right: 2px;
+    width: 16px;
+    height: 16px;
 }
 /* Tree lines and arrows */
 .tree-lines {
@@ -539,11 +562,12 @@ html, body {
     padding: 0;
     width: 16px;
     height: 16px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: transform 0.15s ease;
+    transition: none;
+    margin-right: 2px;
 }
 
 .expand-btn .material-symbols-outlined {
