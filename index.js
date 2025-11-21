@@ -899,9 +899,8 @@
         for (let i = 0; i < parents.length; ++i) {
             lines += `<span class="tree-vline" style="visibility:${parents[i] ? 'visible' : 'hidden'}"></span>`;
         }
-        // For the current node, add a connector (├ or └)
         if (parents.length > 0) {
-            lines += `<span class="tree-vline tree-branch" style="height:22px;${isLast ? 'border-left:2px solid transparent;' : ''}"></span>`;
+            lines += `<span class="tree-branch${isLast ? ' tree-branch-last' : ''}"></span>`;
         }
         return lines;
     }

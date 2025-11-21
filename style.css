@@ -73,6 +73,9 @@
     top: 2px;
     left: -2px;
 }
+.tree-branch-last {
+    border-left: 2px solid transparent !important;
+}
 .tree-arrow {
     width: 14px;
     height: 14px;
