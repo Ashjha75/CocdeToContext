@@ -1362,32 +1362,15 @@
     const dl = fmt => {
         if (!S.ctx) { toast('Generate first', 'warning'); return; }
         try {
-            if (isFolder) {
-                return {
-                    type: 'svg',
-                    url: 'public/folder.svg', // Use your preferred folder icon SVG
-                    color: '',
-                    cls: 'folder-icon'
-                };
-            }
-            // File icon by extension
-            const ext = name.split('.').pop().toLowerCase();
-            let url = '';
-            if (ext === 'js') url = 'public/js.svg';
-            else if (ext === 'html') url = 'public/html.svg';
-            else if (ext === 'css') url = 'public/css.svg';
-            else if (ext === 'py') url = 'public/python.svg';
-            else if (ext === 'md') url = 'public/markdown.svg';
-            else url = 'public/file.svg';
-            // You can add more mappings for other extensions if you add more icons
-            return {
-                type: 'svg',
-                url,
-                color: '',
-                cls: ''
-            };
-            S.ctx = null;
-            S.isArray = false;
+            const text = S.isArray ? S.ctx.join('') : S.ctx;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${S.root}-context.${fmt}`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast('Downloaded!', 'success');
         } catch (e) {
             console.error('Download error:', e);
             toast('Download failed: ' + e.message, 'error');
@@ -1397,8 +1380,12 @@
     // EVENTS
     // ============================================================================
     const setup = () => {
+        console.log('Setting up event handlers...');
         D.tog.onclick = () => D.side.classList.toggle('collapsed');
-        D.sel.onclick = () => inp.click();
+        D.sel.onclick = () => {
+            console.log('Select folder clicked');
+            inp.click();
+        };
         // Model selector event
         if (D.model) {
             D.model.onchange = () => {
