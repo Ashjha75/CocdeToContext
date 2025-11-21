@@ -1,3 +1,58 @@
+/* Context button icon */
+.context-btn-icon {
+    width: 22px;
+    height: 22px;
+    vertical-align: middle;
+    margin-right: 8px;
+    margin-bottom: 2px;
+}
+/* Tree lines and arrows */
+.tree-lines {
+    display: inline-block;
+    min-width: 0.7em;
+    vertical-align: middle;
+}
+.tree-vline {
+    display: inline-block;
+    width: 1.5px;
+    height: 22px;
+    background: #444;
+    margin-right: 2px;
+    margin-left: 0;
+    border-radius: 1px;
+    position: relative;
+    top: 2px;
+}
+.tree-arrow {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    margin-right: 2px;
+    transition: transform 0.15s;
+}
+.tree-item.open > .tree-item-content > .expand-btn .tree-arrow {
+    transform: rotate(90deg);
+}
+/* Tree lines and arrows */
+.tree-lines {
+    display: inline-block;
+    color: #555;
+    font-size: 1em;
+    min-width: 0.7em;
+    letter-spacing: -0.1em;
+    user-select: none;
+    vertical-align: middle;
+}
+.tree-arrow {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    margin-right: 2px;
+    transition: transform 0.15s;
+}
+.tree-item.open > .tree-item-content > .expand-btn .tree-arrow {
+    transform: rotate(90deg);
+}
 /* ============================================================================
    CODEVAULT - OPTIMIZED VS CODE STYLE
    Performance Optimized + Material Icons
