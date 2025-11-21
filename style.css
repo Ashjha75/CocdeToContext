@@ -1,3 +1,87 @@
+/* Pure CSS Toolbar Icons */
+.css-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    position: relative;
+    opacity: 0.92;
+    transition: opacity 0.15s, transform 0.15s;
+}
+.btn-icon-small:hover .css-icon {
+    opacity: 1;
+    transform: scale(1.12);
+}
+/* Arrow Down */
+.css-icon-arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid #e8e8e8;
+    margin: 5px auto 0 auto;
+}
+/* Arrow Up */
+.css-icon-arrow-up {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 10px solid #e8e8e8;
+    margin: 5px auto 0 auto;
+}
+/* Checkmark */
+.css-icon-check {
+    width: 20px;
+    height: 20px;
+}
+.css-icon-check::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    width: 6px;
+    height: 12px;
+    border-right: 3px solid #e8e8e8;
+    border-bottom: 3px solid #e8e8e8;
+    transform: rotate(45deg);
+}
+/* Circle Outline */
+.css-icon-circle {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e8e8e8;
+    border-radius: 50%;
+    box-sizing: border-box;
+    margin: 1px auto 0 auto;
+}
+/* Trash Can */
+.css-icon-trash {
+    width: 18px;
+    height: 18px;
+    margin: 1px auto 0 auto;
+}
+.css-icon-trash::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 5px;
+    width: 6px;
+    height: 8px;
+    border: 2px solid #e8e8e8;
+    border-radius: 1px;
+    background: none;
+}
+.css-icon-trash::after {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 3px;
+    width: 4px;
+    height: 2px;
+    background: #e8e8e8;
+    border-radius: 1px 1px 0 0;
+}
 /* ============================================================================
    CODEVAULT - OPTIMIZED VS CODE STYLE
    Performance Optimized + Material Icons
