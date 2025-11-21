@@ -22,10 +22,20 @@
     --transition: all 0.15s ease;
 }
 
-/* Material Icons Custom Colors */
-.material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
-    user-select: none;
+
+/* Toolbar Icon (VSCode style) */
+.toolbar-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    margin: 0 auto;
+    filter: none;
+    opacity: 0.92;
+    transition: opacity 0.15s, transform 0.15s;
+}
+.btn-icon-small:hover .toolbar-icon {
+    opacity: 1;
+    transform: scale(1.12);
 }
 
 html, body {

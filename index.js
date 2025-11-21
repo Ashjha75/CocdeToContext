@@ -1395,10 +1395,72 @@
             }
         };
         D.search.oninput = e => {
-            const q = e.target.value.toLowerCase();
-            document.querySelectorAll('.tree-item').forEach(item => {
-                const n = item.querySelector('.file-name').textContent.toLowerCase();
-                item.style.display = n.includes(q) ? '' : 'none';
+            const q = e.target.value.trim().toLowerCase();
+            const allItems = Array.from(document.querySelectorAll('.tree-item'));
+            // Helper: get full path for a tree-item
+            const getPath = item => {
+                let path = '';
+                let cur = item;
+                while (cur && cur.classList.contains('tree-item')) {
+                    const name = cur.querySelector('.file-name')?.textContent || '';
+                    path = name + (path ? '/' + path : '');
+                    cur = cur.parentElement?.closest('.tree-item');
+                }
+                return path.toLowerCase();
+            };
+            // First, hide all
+            allItems.forEach(item => { item.style.display = 'none'; });
+            // If search is empty, show all
+            if (!q) {
+                allItems.forEach(item => { item.style.display = ''; });
+                // Collapse all folders
+                document.querySelectorAll('.tree-children').forEach(tc => tc.classList.remove('open'));
+                document.querySelectorAll('.expand-btn').forEach(btn => btn.classList.remove('expanded'));
+                document.querySelectorAll('.expand-btn .material-symbols-outlined').forEach(span => span.textContent = 'chevron_right');
+                return;
+            }
+            // Find all items that match (by name or path)
+            const matches = allItems.filter(item => {
+                const name = item.querySelector('.file-name')?.textContent.toLowerCase() || '';
+                const path = getPath(item);
+                return name.includes(q) || path.includes(q);
+            });
+            // Show all matches and their ancestors
+            const showSet = new Set();
+            matches.forEach(item => {
+                let cur = item;
+                while (cur && cur.classList.contains('tree-item')) {
+                    showSet.add(cur);
+                    cur = cur.parentElement?.closest('.tree-item');
+                }
+            });
+            allItems.forEach(item => {
+                if (showSet.has(item)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            // Expand all folders that are ancestors of matches
+            document.querySelectorAll('.tree-children').forEach(tc => {
+                const parent = tc.parentElement;
+                if (parent && showSet.has(parent)) {
+                    tc.classList.add('open');
+                    const btn = parent.querySelector('.expand-btn');
+                    if (btn) {
+                        btn.classList.add('expanded');
+                        const span = btn.querySelector('.material-symbols-outlined');
+                        if (span) span.textContent = 'expand_more';
+                    }
+                } else {
+                    tc.classList.remove('open');
+                    const btn = parent?.querySelector('.expand-btn');
+                    if (btn) {
+                        btn.classList.remove('expanded');
+                        const span = btn.querySelector('.material-symbols-outlined');
+                        if (span) span.textContent = 'chevron_right';
+                    }
+                }
             });
         };
         const togFold = o => {
