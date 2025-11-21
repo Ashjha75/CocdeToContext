@@ -1,3 +1,14 @@
+/* Only sidebar main action icons (Select Directory, Create Context) black and small */
+.sidebar-btn-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 8px;
+    margin-bottom: 2px;
+    filter: brightness(0) saturate(100%) invert(0);
+    -webkit-filter: brightness(0) saturate(100%) invert(0);
+    opacity: 0.92;
+}
 /* Context button icon */
 .context-btn-icon {
     width: 22px;

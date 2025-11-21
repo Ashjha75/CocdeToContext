@@ -539,7 +539,7 @@
         if (isFolder) {
             return {
                 type: 'svg',
-                url: 'public/contexticon.svg',
+                url: 'public/arrowRight.svg',
                 color: '',
                 cls: 'folder-icon'
             };
