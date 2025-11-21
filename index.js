@@ -1473,7 +1473,7 @@
         document.onkeydown = e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); D.side.classList.toggle('collapsed'); }
         };
-    };
+    }
     // ============================================================================
     // INIT
     // ============================================================================
@@ -1484,5 +1484,4 @@
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
-}
 })();
