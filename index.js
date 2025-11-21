@@ -1479,6 +1479,42 @@
     // ============================================================================
     // EVENTS
     // ============================================================================
+    const initSidebarResizer = () => {
+        const handle = D.resizer;
+        const panel = D.side;
+        if (!handle || !panel) return;
+
+        const minWidth = panel.getBoundingClientRect().width;
+        const safeMax = Math.max(minWidth, window.innerWidth - 320);
+        let startX = 0;
+        let startWidth = panel.offsetWidth;
+
+        const onMove = e => {
+            const delta = e.clientX - startX;
+            let targetWidth = startWidth + delta;
+            if (targetWidth < minWidth) targetWidth = minWidth;
+            if (targetWidth > safeMax) targetWidth = safeMax;
+            panel.style.width = `${targetWidth}px`;
+        };
+
+        const stopDrag = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', stopDrag);
+            document.body.style.cursor = '';
+            handle.classList.remove('active');
+        };
+
+        handle.addEventListener('mousedown', e => {
+            e.preventDefault();
+            startX = e.clientX;
+            startWidth = panel.offsetWidth;
+            document.body.style.cursor = 'ew-resize';
+            handle.classList.add('active');
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', stopDrag);
+        });
+    };
+
     const setup = () => {
         console.log('Setting up event handlers...');
         if (D.tog) D.tog.addEventListener('click', () => D.side && D.side.classList.toggle('collapsed'));
@@ -1569,6 +1605,7 @@
         if (D.gen) D.gen.addEventListener('click', gen);
         if (D.copy) D.copy.addEventListener('click', copyClip);
         if (D.txt) D.txt.addEventListener('click', () => dl('txt'));
+        initSidebarResizer();
         // Clear All button
         const clearBtn = $('clearAll');
         if (clearBtn) {
