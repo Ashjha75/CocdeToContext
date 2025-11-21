@@ -2101,7 +2101,7 @@
             // Recursive function to traverse directory structure
             async function traverseDirectory(entry, path, files) {
                 if (entry.isFile) {
-                    return new Promise((resolve) => {
+                    return new Promise((resolve, reject) => {
                         entry.file(file => {
                             // Add webkitRelativePath property
                             const relativePath = path + file.name;
@@ -2111,25 +2111,40 @@
                             });
                             files.push(file);
                             resolve();
+                        }, err => {
+                            console.warn('Error reading file:', err);
+                            resolve(); // Continue even if file read fails
                         });
                     });
                 } else if (entry.isDirectory) {
                     const dirReader = entry.createReader();
                     return new Promise((resolve) => {
+                        const allEntries = [];
+                        
                         const readEntries = () => {
                             dirReader.readEntries(async entries => {
                                 if (entries.length === 0) {
+                                    // Done reading this directory, now process all entries
+                                    try {
+                                        for (const childEntry of allEntries) {
+                                            await traverseDirectory(
+                                                childEntry,
+                                                path + entry.name + '/',
+                                                files
+                                            );
+                                        }
+                                    } catch (err) {
+                                        console.warn('Error traversing directory:', err);
+                                    }
                                     resolve();
                                     return;
                                 }
-                                for (const childEntry of entries) {
-                                    await traverseDirectory(
-                                        childEntry,
-                                        path + entry.name + '/',
-                                        files
-                                    );
-                                }
-                                readEntries(); // Continue reading if there are more entries
+                                // Add to collection and continue reading
+                                allEntries.push(...entries);
+                                readEntries();
+                            }, err => {
+                                console.warn('Error reading directory:', err);
+                                resolve(); // Continue even if directory read fails
                             });
                         };
                         readEntries();
