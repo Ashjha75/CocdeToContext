@@ -9,9 +9,12 @@
     -webkit-filter: brightness(0) saturate(100%) invert(0);
     opacity: 0.92;
     object-fit: contain;
-    display: inline-block;
+    display: block;
     padding: 0;
-    box-sizing: content-box;
+    box-sizing: border-box;
+    background: none;
+    max-width: 20px;
+    max-height: 20px;
 }
 /* Context button icon */
 .context-btn-icon {
