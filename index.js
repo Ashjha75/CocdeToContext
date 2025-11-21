@@ -362,21 +362,31 @@
     // ============================================================================
     const S = { files: [], tree: [], root: 'project', ctx: '', busy: false, rendered: 0, basePath: '', basePathSet: false, model: 'gpt' };
     const $ = id => document.getElementById(id);
+    const $safe = id => {
+        const el = document.getElementById(id);
+        if (!el) console.warn(`Missing DOM element with id="${id}"`);
+        return el;
+    };
     const D = {
-        side: $('sidebar'), tog: $('toggleSidebar'), tree: $('fileTree'),
-        search: $('fileSearch'), sel: $('selectDirBtn'),
-        exp: $('expandAll'), col: $('collapseAll'),
-        all: $('selectAll'), none: $('deselectAll'),
-        gen: $('generateContextBtn'), ed: $('codeEditor'),
-        cnt: $('fileCount'), tok: $('tokenCount'), sz: $('totalSize'),
-        pron: $('tokenPronunciation'), lang: $('languagesList'),
-        copy: $('copyBtn'), txt: $('downloadTxtBtn'),
-        load: $('loadingOverlay'), toast: $('toastContainer'),
-        model: $('modelSelector'),
-        loadingText: document.getElementById('loadingText')
+        side: $safe('sidebar'), tog: $safe('toggleSidebar'), tree: $safe('fileTree'),
+        search: $safe('fileSearch'), sel: $safe('selectDirBtn'),
+        exp: $safe('expandAll'), col: $safe('collapseAll'),
+        all: $safe('selectAll'), none: $safe('deselectAll'),
+        gen: $safe('generateContextBtn'), ed: $safe('codeEditor'),
+        cnt: $safe('fileCount'), tok: $safe('tokenCount'), sz: $safe('totalSize'),
+        pron: $safe('tokenPronunciation'), lang: $safe('languagesList'),
+        copy: $safe('copyBtn'), txt: $safe('downloadTxtBtn'),
+        load: $safe('loadingOverlay'), toast: $safe('toastContainer'),
+        model: $safe('modelSelector'),
+        loadingText: $safe('loadingText')
     };
     const inp = document.createElement('input');
-    inp.type = 'file'; inp.webkitdirectory = true; inp.multiple = true; inp.style.display = 'none';
+    inp.type = 'file';
+    inp.multiple = true;
+    inp.setAttribute('webkitdirectory', '');
+    inp.setAttribute('mozdirectory', '');
+    inp.setAttribute('directory', '');
+    inp.style.display = 'none';
     document.body.appendChild(inp);
 
     // ============================================================================
@@ -1249,13 +1259,82 @@
         for (let i = 0; i < textFiles.length; i += FAST_BATCH) {
             const batch = textFiles.slice(i, i + FAST_BATCH);
             const results = await Promise.allSettled(
-                batch.map(f => f.file.text()) // Only read files from the 'textFiles' list
+                batch.map(f => f.file.text())
             );
             results.forEach((result, idx) => {
                 if (result.status === 'fulfilled') {
                     const content = result.value;
                     const p = batch[idx].path;
-                    const loadFiles = async list => {
+                    const filename = batch[idx].name;
+                    
+                    if (content.indexOf('\0') !== -1) {
+                        console.warn('Download: Skipping file with null bytes:', filename);
+                        return;
+                    }
+                    
+                    const lines = content.split('\n');
+                    const longBase64Lines = lines.filter(line => 
+                        line.length > 200 && /^[A-Za-z0-9+/=]+$/.test(line.trim())
+                    ).length;
+                    
+                    if (longBase64Lines > 10) {
+                        console.warn('Download: Skipping file with encoded data:', filename);
+                        return;
+                    }
+                    
+                    const hasVeryLongLine = lines.some(line => line.length > 10000);
+                    if (hasVeryLongLine) {
+                        console.warn('Download: Skipping minified file:', filename);
+                        return;
+                    }
+                    
+                    parts.push('=== FILE: ' + getFullPath(p) + ' ===\n');
+                    parts.push('<document path="' + p + '">\n', content, '\n</document>\n');
+                    
+                    const sFileIndex = S.files.findIndex(sf => sf.path === p);
+                    if (sFileIndex !== -1) {
+                        S.files[sFileIndex].file = null;
+                    }
+                } else {
+                    console.warn('Skip', batch[idx].name, result.reason);
+                }
+            });
+            done += batch.length;
+            const pct = Math.round(done / textFiles.length * 100);
+            const status = [];
+            status.push(`${done}/${textFiles.length}`);
+            if (binaryFiles && binaryFiles.length > 0) {
+                status.push(`${binaryFiles.length} binary`);
+            }
+            D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">download</span><p>Preparing: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
+
+            if (i % (FAST_BATCH * 5) === 0) {
+                 await new Promise(r => setTimeout(r, 0));
+            }
+        }
+
+        await new Promise(r => setTimeout(r, 0));
+
+        const blob = new Blob(parts, { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${S.root}-context.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        const stats = [];
+        stats.push(`${textFiles.length} files`);
+        if (binaryFiles && binaryFiles.length > 0) {
+            stats.push(`${binaryFiles.length} binary`);
+        }
+        stats.push(bytes(blob.size));
+        D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">check_circle</span><p>Downloaded!</p><small>File: ${S.root}-context.txt</small><small>${stats.join(' • ')}</small></div>`;
+
+        parts.length = 0;
+    };
+
+    const loadFiles = async list => {
                         try {
                             // Clear previous memory before loading new files
                             clearMemory();
@@ -1381,16 +1460,26 @@
     // ============================================================================
     const setup = () => {
         console.log('Setting up event handlers...');
-        D.tog.onclick = () => D.side.classList.toggle('collapsed');
-        D.sel.onclick = () => {
-            console.log('Select folder clicked');
-            inp.click();
-        };
+        if (D.tog) D.tog.addEventListener('click', () => D.side && D.side.classList.toggle('collapsed'));
+        
+        if (D.sel) {
+            D.sel.addEventListener('click', () => {
+                console.log('Select folder clicked');
+                try { 
+                    inp.click(); 
+                } catch (e) { 
+                    console.error('Failed to open directory picker:', e); 
+                    toast('Directory picker blocked', 'error'); 
+                }
+            });
+        } else {
+            console.warn('selectDirBtn not found — directory selection unavailable');
+        }
         // Model selector event
         if (D.model) {
-            D.model.onchange = () => {
+            D.model.addEventListener('change', () => {
                 S.model = D.model.value;
-            };
+            });
         }
         // Optimize file input change handler
         inp.onchange = e => {
@@ -1423,13 +1512,13 @@
                 stats();
             }
         };
-        D.search.oninput = e => {
+        if (D.search) D.search.addEventListener('input', e => {
             const q = e.target.value.toLowerCase();
             document.querySelectorAll('.tree-item').forEach(item => {
                 const n = item.querySelector('.file-name').textContent.toLowerCase();
                 item.style.display = n.includes(q) ? '' : 'none';
             });
-        };
+        });
         const togFold = o => {
             document.querySelectorAll('.expand-btn').forEach(btn => {
                 const item = btn.closest('.tree-item');
@@ -1445,21 +1534,24 @@
             document.querySelectorAll('.file-checkbox:not([disabled])').forEach(cb => cb.checked = c);
             stats();
         };
-        D.exp.onclick = () => togFold(true);
-        D.col.onclick = () => togFold(false);
-        D.all.onclick = () => togCheck(true);
-        D.none.onclick = () => togCheck(false);
-        D.gen.onclick = gen;
-        D.copy.onclick = copyClip;
-        D.txt.onclick = () => dl('txt');
+        if (D.exp) D.exp.addEventListener('click', () => togFold(true));
+        if (D.col) D.col.addEventListener('click', () => togFold(false));
+        if (D.all) D.all.addEventListener('click', () => togCheck(true));
+        if (D.none) D.none.addEventListener('click', () => togCheck(false));
+        if (D.gen) D.gen.addEventListener('click', gen);
+        if (D.copy) D.copy.addEventListener('click', copyClip);
+        if (D.txt) D.txt.addEventListener('click', () => dl('txt'));
         // Clear All button
         const clearBtn = $('clearAll');
         if (clearBtn) {
             clearBtn.onclick = clearAll;
         }
-        document.onkeydown = e => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); D.side.classList.toggle('collapsed'); }
-        };
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') { 
+                e.preventDefault(); 
+                if (D.side) D.side.classList.toggle('collapsed'); 
+            }
+        });
     }
     // ============================================================================
     // INIT
@@ -1471,4 +1563,4 @@
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
-})();
+}})();
