@@ -373,6 +373,7 @@
         exp: $safe('expandAll'), col: $safe('collapseAll'),
         all: $safe('selectAll'), none: $safe('deselectAll'),
         gen: $safe('generateContextBtn'), ed: $safe('codeEditor'),
+        resizer: $safe('sidebarResizer'),
         cnt: $safe('fileCount'), tok: $safe('tokenCount'), sz: $safe('totalSize'),
         pron: $safe('tokenPronunciation'), lang: $safe('languagesList'),
         copy: $safe('copyBtn'), txt: $safe('downloadTxtBtn'),

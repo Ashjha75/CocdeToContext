@@ -255,11 +255,29 @@ html, body {
     transition: width 0.2s ease;
     overflow: hidden;
     flex-shrink: 0;
+    min-width: 280px;
+    max-width: 520px;
 }
 
 .sidebar.collapsed {
     width: 0;
     border-right: none;
+}
+
+.sidebar-resizer {
+    width: 6px;
+    cursor: ew-resize;
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0) 100%);
+    border-radius: 3px;
+    margin-left: 1px;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+    height: 100%;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer.active {
+    background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.5) 100%);
 }
 
 .content-area {

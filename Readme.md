@@ -49,6 +49,33 @@ The user interface is built with a clean, professional dark theme inspired by mo
 -   **Dark (Background)**: `#141413`
 -   **Accent (UI Elements)**: `#e3dacc`
 
+## 🤖 AI Model Templates
+
+CodeToContext optimizes the output format for different AI models. Choose the template that matches your target AI:
+
+### 📝 GPT-4 (Markdown Format)
+**Best for:** ChatGPT, GPT-4, OpenAI API
+- Clean markdown structure with code blocks
+- Clear instructions at the top
+- Language-specific syntax highlighting
+- Easy to read and parse for GPT models
+
+### 🤖 Claude (XML Format)
+**Best for:** Claude (Anthropic), Claude API
+- Structured XML tags for semantic understanding
+- Explicit `<context>`, `<file>`, `<content>` hierarchy
+- Better comprehension of project structure
+- Optimized for Claude's training on structured data
+
+### ✨ Gemini (Hybrid Format)
+**Best for:** Google Gemini, Bard
+- Combination of markdown and metadata
+- File metadata with language tags
+- Organized sections for better navigation
+- Balanced between readability and structure
+
+**How to use:** Select your preferred AI model from the dropdown in the editor header before generating context. The output will be automatically formatted for optimal performance with that AI.
+
 ## 🛠️ Key JavaScript Functions
 
 The application's logic is contained within a single `<script>` tag in `index.html`. Here are some of the core functions:
