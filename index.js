@@ -1334,76 +1334,6 @@
         parts.length = 0;
     };
 
-    const loadFiles = async list => {
-                        try {
-                            // Clear previous memory before loading new files
-                            clearMemory();
-
-                            load(true, `Loading ${list.length} files...`);
-                            // Fast path: convert FileList to Array
-                            const all = Array.from(list);
-                            load(true, 'Filtering files...');
-                            await new Promise(r => setTimeout(r, 0));
-                            // Filter files - CRITICAL: Ensure all ignored files are removed here
-                            S.files = all.filter(f => !ign(f.webkitRelativePath))
-                                .map(f => ({
-                                    path: f.webkitRelativePath,
-                                    name: f.name,
-                                    size: f.size,
-                                    file: f
-                                }));
-                            // Auto-detect absolute base path when running in desktop/Electron environments
-                            // where File objects may expose a non-standard `path` property.
-                            if (!S.basePathSet) {
-                                const cand = S.files.find(ff => ff.file && ff.file.path);
-                                if (cand && cand.file && cand.file.path) {
-                                    try {
-                                        const full = String(cand.file.path);
-                                        const rel = String(cand.path);
-                                        const sep = full.indexOf('\\') !== -1 ? '\\' : '/';
-                                        const relConv = rel.split('/').join(sep);
-                                        let base = '';
-                                        if (full.endsWith(relConv)) {
-                                            base = full.slice(0, full.length - relConv.length);
-                                            base = base.replace(/[\\/]+$/, '');
-                                        } else {
-                                            const idx = full.indexOf(relConv);
-                                            if (idx !== -1) base = full.slice(0, idx).replace(/[\\/]+$/, '');
-                                        }
-                                        if (base) {
-                                            S.basePath = base;
-                                            S.basePathSet = true;
-                                            console.info('Auto-detected base path:', base);
-                                        }
-                                    } catch (e) {
-                                        // ignore; leave base path unset
-                                    }
-                                }
-                            }
-                            if (S.files.length === 0) { toast('No valid files', 'warning'); load(false); return; }
-                            if (S.files.length > 5000) { toast(`Large directory (${S.files.length} files) - rendering first 1000`, 'warning'); }
-                            load(true, 'Building file tree...');
-                            S.root = S.files[0].path.split('/')[0];
-                            // Let UI update before building tree
-                            await new Promise(r => setTimeout(r, 0));
-                            S.tree = build(S.files.slice(0, 3000)); // Limit tree size, but build from fully filtered list
-                            load(true, 'Rendering tree...');
-                            await new Promise(r => setTimeout(r, 0));
-                            // Render tree
-                            const items = render(S.tree);
-                            D.tree.innerHTML = items.map(x => x.html).join('');
-                            S.rendered = items.length;
-                            stats();
-                            toast(`Loaded ${S.files.length} files`, 'success');
-                        } catch (e) {
-                            console.error('Load error:', e);
-                            toast('Load failed', 'error');
-                        } finally {
-                            load(false);
-                        }
-                    };
-    // (removed orphaned code)
-
     const genStruct = (nodes, pfx = '') => {
         let r = '';
         nodes.forEach((nd, i) => {
@@ -1563,4 +1493,4 @@
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
-}})();
+})();
