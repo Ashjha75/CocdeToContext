@@ -360,7 +360,7 @@
     // ============================================================================
     // STATE
     // ============================================================================
-    const S = { files: [], tree: [], root: 'project', ctx: '', busy: false, rendered: 0, basePath: '', basePathSet: false };
+    const S = { files: [], tree: [], root: 'project', ctx: '', busy: false, rendered: 0, basePath: '', basePathSet: false, model: 'gpt' };
     const $ = id => document.getElementById(id);
     const D = {
         side: $('sidebar'), tog: $('toggleSidebar'), tree: $('fileTree'),
@@ -371,7 +371,9 @@
         cnt: $('fileCount'), tok: $('tokenCount'), sz: $('totalSize'),
         pron: $('tokenPronunciation'), lang: $('languagesList'),
         copy: $('copyBtn'), txt: $('downloadTxtBtn'),
-        load: $('loadingOverlay'), toast: $('toastContainer')
+        load: $('loadingOverlay'), toast: $('toastContainer'),
+        model: $('modelSelector'),
+        loadingText: document.getElementById('loadingText')
     };
     const inp = document.createElement('input');
     inp.type = 'file'; inp.webkitdirectory = true; inp.multiple = true; inp.style.display = 'none';
@@ -420,7 +422,13 @@
     // ============================================================================
     // UTILS
     // ============================================================================
-    const load = s => (D.load.classList.toggle('active', s), S.busy = s);
+    // Enhanced load function with optional message
+    const load = (s, msg) => {
+        D.load.classList.toggle('active', s);
+        S.busy = s;
+        if (D.loadingText && msg) D.loadingText.textContent = msg;
+        else if (D.loadingText && s) D.loadingText.textContent = 'Processing files...';
+    };
     const toast = (m, t = 'info') => {
         const el = document.createElement('div');
         el.className = `toast ${t}`;
@@ -1041,8 +1049,11 @@
         if (S.busy) return;
         const cbs = Array.from(document.querySelectorAll('.file-checkbox:checked:not([disabled])'));
         if (!cbs.length) { toast('Select files first', 'warning'); return; }
-        load(true);
+        load(true, 'Generating context...');
         D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Preparing...</p></div>';
+
+        // Get selected model
+        S.model = D.model ? D.model.value : 'gpt';
 
         try {
             const paths = cbs.map(c => c.dataset.path);
@@ -1118,27 +1129,22 @@
                         const content = result.value;
                         const path = batch[idx].path;
                         const filename = batch[idx].name;
-                        
                         // Validate content is actually text (not binary disguised as text)
-                        // Check for null bytes or high ratio of non-printable characters
                         if (content.indexOf('\0') !== -1) {
                             console.warn('Skipping file with null bytes (binary):', filename);
                             failed++;
                             return;
                         }
-                        
                         // Skip if content looks like base64 encoded data (common in compiled files)
                         const lines = content.split('\n');
                         const longBase64Lines = lines.filter(line => 
                             line.length > 200 && /^[A-Za-z0-9+/=]+$/.test(line.trim())
                         ).length;
-                        
                         if (longBase64Lines > 10) {
                             console.warn('Skipping file with encoded data:', filename);
                             failed++;
                             return;
                         }
-                        
                         // Skip extremely long single lines (typical of minified code)
                         const hasVeryLongLine = lines.some(line => line.length > 10000);
                         if (hasVeryLongLine) {
@@ -1146,7 +1152,6 @@
                             failed++;
                             return;
                         }
-                        
                         contents.push({
                             path: path,
                             content: content
@@ -1160,9 +1165,10 @@
                 const pct = Math.round(done / textFiles.length * 100);
                 const status = [];
                 status.push(`<strong>${done}/${textFiles.length}</strong> files`);
-                if (skipped > 0) status.push(`<span style="color:#3b82f6">${skipped} binary</span>`);
-                if (failed > 0) status.push(`<span style="color:#fbbf24">${failed} failed</span>`);
-                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Reading files: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
+                if (skipped > 0) status.push(`<span style=\"color:#3b82f6\">${skipped} binary</span>`);
+                if (failed > 0) status.push(`<span style=\"color:#fbbf24\">${failed} failed</span>`);
+                D.ed.innerHTML = `<div class=\"editor-placeholder\"><span class=\"material-symbols-outlined\">hourglass_empty</span><p>Reading files: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
+                load(true, `Reading files: ${pct}%`);
                 // Yield to UI only every 5 batches for better performance
                 if (i % (FAST_BATCH * 5) === 0) {
                     await new Promise(r => setTimeout(r, 0));
@@ -1170,15 +1176,24 @@
             }
 
             D.ed.innerHTML = '<div class="editor-placeholder"><span class="material-symbols-outlined">hourglass_empty</span><p>Building output...</p></div>';
+            load(true, 'Building output...');
             await new Promise(r => setTimeout(r, 10));
             const parts = [];
+            // === AI Model Template Logic ===
+            if (S.model === 'gpt') {
+                parts.push('### GPT-4 CONTEXT TEMPLATE\n');
+            } else if (S.model === 'claude') {
+                parts.push('### CLAUDE CONTEXT TEMPLATE\n');
+            } else if (S.model === 'gemini') {
+                parts.push('### GEMINI CONTEXT TEMPLATE\n');
+            }
             parts.push('<folder-structure>\n', struct, '</folder-structure>\n');
             // Binary files are intentionally excluded from the generated output (they remain visible in the tree)
             // Build document sections faster - no UI updates during build
             contents.forEach(({ path, content }) => {
                 const full = getFullPath(path);
                 parts.push(`=== FILE: ${full} ===\n`);
-                parts.push(`<document path="${path}">\n`, content, '\n</document>\n');
+                parts.push(`<document path=\"${path}\">\n`, content, '\n</document>\n');
             });
 
             let ctx;
@@ -1186,7 +1201,7 @@
                 ctx = parts.join(''); // This is now only done for smaller projects
             } catch (e) {
                 console.error('Too large for string join (unexpected):', e);
-                D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">warning</span><h3 style="color:#fbbf24;margin:10px 0">Too Large!</h3><p>Size: <strong>${bytes(parts.reduce((s, p) => s + p.length, 0))}</strong></p><p>Use download button.</p></div>`;
+                D.ed.innerHTML = `<div class=\"editor-placeholder\"><span class=\"material-symbols-outlined\">warning</span><h3 style=\"color:#fbbf24;margin:10px 0\">Too Large!</h3><p>Size: <strong>${bytes(parts.reduce((s, p) => s + p.length, 0))}</strong></p><p>Use download button.</p></div>`;
                 S.ctx = parts;
                 S.isArray = true;
                 toast('Ready for download!', 'success');
@@ -1204,9 +1219,9 @@
             if (isLarge) {
                 const prev = ctx.substring(0, 50000);
                 const rem = ctx.length - 50000;
-                D.ed.innerHTML = `<div style="padding:12px;background:#1e1e1e;border-radius:4px;"><div style="background:#2d2d30;padding:8px;border-radius:4px;margin-bottom:12px;border-left:3px solid #fbbf24;"><strong style="color:#fbbf24;">⚠️ Preview</strong><br><small style="color:#888;">First ${bytes(50000)} of ${bytes(ctx.length)}</small><br><small style="color:#888;">Use download for full</small></div><pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:500px;overflow:auto">${esc(prev)}</pre><div style="background:#2d2d30;padding:8px;border-radius:4px;margin-top:12px;text-align:center;"><small style="color:#888;">... ${bytes(rem)} more</small></div></div>`;
+                D.ed.innerHTML = `<div style=\"padding:12px;background:#1e1e1e;border-radius:4px;\"><div style=\"background:#2d2d30;padding:8px;border-radius:4px;margin-bottom:12px;border-left:3px solid #fbbf24;\"><strong style=\"color:#fbbf24;\">⚠️ Preview</strong><br><small style=\"color:#888;\">First ${bytes(50000)} of ${bytes(ctx.length)}</small><br><small style=\"color:#888;\">Use download for full</small></div><pre style=\"margin:0;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:500px;overflow:auto\">${esc(prev)}</pre><div style=\"background:#2d2d30;padding:8px;border-radius:4px;margin-top:12px;text-align:center;\"><small style=\"color:#888;\">... ${bytes(rem)} more</small></div></div>`;
             } else {
-                D.ed.innerHTML = `<pre style="margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto">${esc(ctx)}</pre>`;
+                D.ed.innerHTML = `<pre style=\"margin:0;padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.3;max-height:100%;overflow:auto\">${esc(ctx)}</pre>`;
             }
             const stats = [];
             stats.push(`${textFiles.length} files`);
@@ -1220,7 +1235,7 @@
         } catch (e) {
             console.error('Gen error:', e);
             toast('Failed: ' + e.message, 'error');
-            D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">error</span><p>Failed</p><small style="color:#ef4444">${e.message}</small></div>`;
+            D.ed.innerHTML = `<div class=\"editor-placeholder\"><span class=\"material-symbols-outlined\">error</span><p>Failed</p><small style=\"color:#ef4444\">${e.message}</small></div>`;
         } finally {
             load(false);
         }
@@ -1241,82 +1256,75 @@
                 if (result.status === 'fulfilled') {
                     const content = result.value;
                     const p = batch[idx].path;
-                    const filename = batch[idx].name;
-                    
-                    // Same validation as in gen() function
-                    // Skip files with null bytes (binary disguised as text)
-                    if (content.indexOf('\0') !== -1) {
-                        console.warn('Download: Skipping file with null bytes:', filename);
-                        return;
-                    }
-                    
-                    // Skip base64 encoded content
-                    const lines = content.split('\n');
-                    const longBase64Lines = lines.filter(line => 
-                        line.length > 200 && /^[A-Za-z0-9+/=]+$/.test(line.trim())
-                    ).length;
-                    
-                    if (longBase64Lines > 10) {
-                        console.warn('Download: Skipping file with encoded data:', filename);
-                        return;
-                    }
-                    
-                    // Skip minified files (very long single lines)
-                    const hasVeryLongLine = lines.some(line => line.length > 10000);
-                    if (hasVeryLongLine) {
-                        console.warn('Download: Skipping minified file:', filename);
-                        return;
-                    }
-                    
-                    parts.push('=== FILE: ' + getFullPath(p) + ' ===\n');
-                    parts.push('<document path="' + p + '">\n', content, '\n</document>\n');
-                    
-                    // OPTIMIZE: Nullify the file reference from S.files after reading to help GC
-                    const sFileIndex = S.files.findIndex(sf => sf.path === p);
-                    if (sFileIndex !== -1) {
-                        S.files[sFileIndex].file = null; // Release the File object reference
-                    }
-                } else {
-                    console.warn('Skip', batch[idx].name, result.reason);
-                }
-            });
-            done += batch.length;
-            const pct = Math.round(done / textFiles.length * 100);
-            const status = [];
-            status.push(`${done}/${textFiles.length}`);
-            if (binaryFiles && binaryFiles.length > 0) {
-                status.push(`${binaryFiles.length} binary`);
-            }
-            D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">download</span><p>Preparing: ${pct}%</p><small>${status.join(' • ')}</small></div>`;
+                    const loadFiles = async list => {
+                        try {
+                            // Clear previous memory before loading new files
+                            clearMemory();
 
-            // OPTIMIZE: Yield control frequently during parts building
-            if (i % (FAST_BATCH * 5) === 0) { // Yield every 5 batches
-                 await new Promise(r => setTimeout(r, 0));
-            }
-        }
-
-        // OPTIMIZE: Yield control one final time before creating Blob
-        await new Promise(r => setTimeout(r, 0));
-
-        const blob = new Blob(parts, { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${S.root}-context.txt`;
-        a.click();
-        URL.revokeObjectURL(url); // REVOKE URL IMMEDIATELY
-
-        const stats = [];
-        stats.push(`${textFiles.length} files`);
-        if (binaryFiles && binaryFiles.length > 0) {
-            stats.push(`${binaryFiles.length} binary`);
-        }
-        stats.push(bytes(blob.size));
-        D.ed.innerHTML = `<div class="editor-placeholder"><span class="material-symbols-outlined">check_circle</span><p>Downloaded!</p><small>File: ${S.root}-context.txt</small><small>${stats.join(' • ')}</small></div>`;
-
-        // Explicitly clear parts array after download
-        parts.length = 0;
-    };
+                            load(true, `Loading ${list.length} files...`);
+                            // Fast path: convert FileList to Array
+                            const all = Array.from(list);
+                            load(true, 'Filtering files...');
+                            await new Promise(r => setTimeout(r, 0));
+                            // Filter files - CRITICAL: Ensure all ignored files are removed here
+                            S.files = all.filter(f => !ign(f.webkitRelativePath))
+                                .map(f => ({
+                                    path: f.webkitRelativePath,
+                                    name: f.name,
+                                    size: f.size,
+                                    file: f
+                                }));
+                            // Auto-detect absolute base path when running in desktop/Electron environments
+                            // where File objects may expose a non-standard `path` property.
+                            if (!S.basePathSet) {
+                                const cand = S.files.find(ff => ff.file && ff.file.path);
+                                if (cand && cand.file && cand.file.path) {
+                                    try {
+                                        const full = String(cand.file.path);
+                                        const rel = String(cand.path);
+                                        const sep = full.indexOf('\\') !== -1 ? '\\' : '/';
+                                        const relConv = rel.split('/').join(sep);
+                                        let base = '';
+                                        if (full.endsWith(relConv)) {
+                                            base = full.slice(0, full.length - relConv.length);
+                                            base = base.replace(/[\\/]+$/, '');
+                                        } else {
+                                            const idx = full.indexOf(relConv);
+                                            if (idx !== -1) base = full.slice(0, idx).replace(/[\\/]+$/, '');
+                                        }
+                                        if (base) {
+                                            S.basePath = base;
+                                            S.basePathSet = true;
+                                            console.info('Auto-detected base path:', base);
+                                        }
+                                    } catch (e) {
+                                        // ignore; leave base path unset
+                                    }
+                                }
+                            }
+                            if (S.files.length === 0) { toast('No valid files', 'warning'); load(false); return; }
+                            if (S.files.length > 5000) { toast(`Large directory (${S.files.length} files) - rendering first 1000`, 'warning'); }
+                            load(true, 'Building file tree...');
+                            S.root = S.files[0].path.split('/')[0];
+                            // Let UI update before building tree
+                            await new Promise(r => setTimeout(r, 0));
+                            S.tree = build(S.files.slice(0, 3000)); // Limit tree size, but build from fully filtered list
+                            load(true, 'Rendering tree...');
+                            await new Promise(r => setTimeout(r, 0));
+                            // Render tree
+                            const items = render(S.tree);
+                            D.tree.innerHTML = items.map(x => x.html).join('');
+                            S.rendered = items.length;
+                            stats();
+                            toast(`Loaded ${S.files.length} files`, 'success');
+                        } catch (e) {
+                            console.error('Load error:', e);
+                            toast('Load failed', 'error');
+                        } finally {
+                            load(false);
+                        }
+                    };
+    // (removed orphaned code)
 
     const genStruct = (nodes, pfx = '') => {
         let r = '';
@@ -1392,11 +1400,17 @@
     const setup = () => {
         D.tog.onclick = () => D.side.classList.toggle('collapsed');
         D.sel.onclick = () => inp.click();
+        // Model selector event
+        if (D.model) {
+            D.model.onchange = () => {
+                S.model = D.model.value;
+            };
+        }
         // Optimize file input change handler
         inp.onchange = e => {
             if (!e.target.files.length) return;
             // Show loader IMMEDIATELY
-            load(true);
+            load(true, 'Loading files...');
             // Process files in next tick to let loader render
             setTimeout(() => loadFiles(e.target.files), 0);
         };
