@@ -143,12 +143,13 @@ html, body {
     color: var(--text-secondary);
     cursor: pointer;
     padding: 6px;
-    border-radius: 4px;
-    transition: var(--transition);
+    border-radius: 5px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    position: relative;
 }
 
 .btn-toggle-sidebar:hover,
@@ -156,7 +157,16 @@ html, body {
 .btn-icon-small:hover,
 .btn-action:hover {
     color: var(--color-primary);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.btn-toggle-sidebar:active,
+.btn-icon:active,
+.btn-icon-small:active,
+.btn-action:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .btn-icon-small {
@@ -315,25 +325,56 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
+    padding: 48px 24px;
     text-align: center;
     color: var(--text-secondary);
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .empty-state .material-symbols-outlined {
-    font-size: 64px;
-    opacity: 0.3;
-    margin-bottom: 12px;
+    font-size: 72px;
+    opacity: 0.35;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--text-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.35;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+    }
 }
 
 .empty-state p {
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 15px;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
 .empty-state small {
-    font-size: 11px;
-    opacity: 0.7;
+    font-size: 12px;
+    opacity: 0.75;
+    line-height: 1.5;
 }
 
 /* ============================================================================
@@ -349,14 +390,21 @@ html, body {
     display: flex;
     align-items: center;
     padding: 3px 8px;
-    min-height: 24px;
+    min-height: 26px;
     cursor: pointer;
-    transition: background 0.1s ease;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     gap: 4px;
+    border-radius: 4px;
 }
 
 .tree-item-content:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(2px);
+}
+
+.tree-item-content:active {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateX(0);
 }
 
 /* Indentation levels */
@@ -396,36 +444,66 @@ html, body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    margin-right: 2px;
+    margin-right: 6px;
+    position: relative;
 }
 
-/* VS Code style SVG icons */
+/* VS Code style SVG icons with color hints */
 .file-icon .vscode-icon {
     width: 18px;
     height: 18px;
     object-fit: contain;
     display: block;
+    filter: brightness(1.0);
+    transition: all 0.2s ease;
 }
 
-/* Folder icon slightly larger */
+/* File type specific icon colors - VSCode inspired */
+.file-icon.js-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(35deg) saturate(1.3); }
+.file-icon.ts-icon .vscode-icon { filter: brightness(1.15) sepia(0.35) hue-rotate(180deg) saturate(1.2); }
+.file-icon.py-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(170deg) saturate(1.3); }
+.file-icon.json-icon .vscode-icon { filter: brightness(1.3) sepia(0.4) hue-rotate(40deg) saturate(1.4); }
+.file-icon.md-icon .vscode-icon { filter: brightness(1.1) sepia(0.25) hue-rotate(200deg) saturate(1.2); }
+.file-icon.css-icon .vscode-icon { filter: brightness(1.15) sepia(0.35) hue-rotate(220deg) saturate(1.3); }
+.file-icon.html-icon .vscode-icon { filter: brightness(1.2) sepia(0.35) hue-rotate(350deg) saturate(1.3); }
+.file-icon.jsx-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(160deg) saturate(1.3); }
+.file-icon.tsx-icon .vscode-icon { filter: brightness(1.15) sepia(0.35) hue-rotate(185deg) saturate(1.2); }
+.file-icon.vue-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(110deg) saturate(1.4); }
+
+/* Folder icon with animated state changes */
 .folder-icon .vscode-icon {
     width: 19px;
     height: 19px;
-    opacity: 0.9;
+    opacity: 0.85;
+    filter: brightness(1.05) sepia(0.2) hue-rotate(30deg) saturate(1.15);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Smooth icon loading */
-.vscode-icon {
-    transition: opacity 0.2s ease;
-}
-
-.vscode-icon:hover {
+/* Folder open state - brighter and more saturated */
+.expanded > .tree-item-content .folder-icon .vscode-icon {
     opacity: 1;
+    filter: brightness(1.2) sepia(0.3) hue-rotate(35deg) saturate(1.3);
+    transform: scale(1.05);
 }
 
-/* Fallback for Material Icons (if needed) */
+/* Smooth icon interactions */
+.vscode-icon {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tree-item-content:hover .vscode-icon {
+    filter: brightness(1.35) !important;
+    transform: scale(1.1);
+}
+
+.tree-item-content:hover .folder-icon .vscode-icon {
+    filter: brightness(1.3) sepia(0.25) hue-rotate(35deg) saturate(1.25) !important;
+}
+
+/* Fallback for Material Icons */
 .file-icon .material-symbols-outlined {
-    font-size: 16px;
+    font-size: 17px;
+    opacity: 0.9;
 }
 
 .file-label {
@@ -459,6 +537,18 @@ html, body {
     color: var(--text-secondary);
     margin-left: auto;
     flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.tree-item-content:hover .file-size {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .tree-children {
@@ -612,23 +702,34 @@ html, body {
     height: 100%;
     color: var(--text-secondary);
     text-align: center;
-    padding: 20px;
+    padding: 32px;
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 .editor-placeholder .material-symbols-outlined {
-    font-size: 64px;
-    opacity: 0.3;
-    margin-bottom: 12px;
+    font-size: 80px;
+    opacity: 0.4;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--text-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: pulse 2.5s ease-in-out infinite;
 }
 
 .editor-placeholder p {
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 16px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+    opacity: 0.9;
 }
 
 .editor-placeholder small {
-    font-size: 11px;
-    opacity: 0.7;
+    font-size: 13px;
+    opacity: 0.75;
+    line-height: 1.6;
+    max-width: 400px;
 }
 
 /* Syntax Highlighting */

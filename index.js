@@ -14,10 +14,13 @@
             '.npm',
             '.yarn',
             'bower_components',
+            
             // Version Control
             '.git',
             '.svn',
             '.hg',
+            '.gitignore',
+            
             // Python
             '__pycache__',
             '.pytest_cache',
@@ -33,6 +36,8 @@
             'build',
             '*.egg-info',
             '.eggs',
+            'site-packages',
+            
             // Java/Spring Boot/Maven/Gradle
             'target',
             'build',
@@ -45,7 +50,10 @@
             'generated',
             'generated-sources',
             'generated-test-sources',
-            // IDE Files
+            '.apt_generated',
+            '.apt_generated_tests',
+            
+            // IDE Files (VS Code, IntelliJ, Eclipse, etc.)
             '.vscode',
             '.idea',
             '.eclipse',
@@ -53,11 +61,13 @@
             '.classpath',
             '.project',
             '.factorypath',
-            '.apt_generated',
-            '.apt_generated_tests',
             'nbproject',
             '.nb-gradle',
-            // JavaScript/TypeScript
+            '.vs',
+            '.vscode-test',
+            '*.iml',
+            
+            // JavaScript/TypeScript Build
             '.next',
             '.nuxt',
             '.output',
@@ -67,32 +77,73 @@
             'dist',
             'coverage',
             '.nyc_output',
+            'build',
+            'public/build',
+            '.webpack',
+            
             // PHP
             'vendor',
+            
+            // Ruby
+            '.bundle',
+            
             // Logs & Temp
             'logs',
             'temp',
             'tmp',
             '.log',
+            '.tmp',
+            
             // OS
             '.DS_Store',
-            'Thumbs.db'
+            'Thumbs.db',
+            'desktop.ini',
+            
+            // Other
+            'coverage',
+            '.sass-cache',
+            '.eslintcache'
         ]),
+        
         exts: new Set([
             // Executables & Binaries
-            'exe', 'dll', 'so', 'dylib', 'a', 'o', 'obj',
+            'exe', 'dll', 'so', 'dylib', 'a', 'o', 'obj', 'bin',
+            
             // Java Compiled
-            'class',
+            'class', 'jar', 'war', 'ear',
+            
             // Python Compiled
             'pyc', 'pyo', 'pyd',
-            // Media
-            'mp4', 'mp3', 'wav', 'avi', 'mov', 'flv', 'wmv', 'ogg',
+            
+            // Images (CRITICAL: These appear as binary in output!)
+            'png', 'jpg', 'jpeg', 'gif', 'bmp', 'ico', 'webp', 'svg', 'tiff', 'psd', 'ai',
+            
+            // Media (Videos, Audio)
+            'mp4', 'mp3', 'wav', 'avi', 'mov', 'flv', 'wmv', 'ogg', 'webm', 'mkv', 'flac', 'aac',
+            
             // Archives
-            'zip', 'tar', 'gz', 'rar', '7z', 'bz2', 'xz', 'tgz',
+            'zip', 'tar', 'gz', 'rar', '7z', 'bz2', 'xz', 'tgz', 'iso',
+            
             // Fonts
             'ttf', 'woff', 'woff2', 'eot', 'otf',
-            // Other
-            'log', 'cache', 'swp', 'swo', 'bak', 'tmp'
+            
+            // Documents (Binary formats)
+            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+            
+            // Database
+            'db', 'sqlite', 'sqlite3',
+            
+            // Minified/Compiled (CRITICAL: Skip compiled code!)
+            'min.js', 'min.css', 'bundle.js', 'chunk.js',
+            
+            // Logs & Cache
+            'log', 'cache', 'swp', 'swo', 'bak', 'tmp',
+            
+            // Lock files
+            'lock',
+            
+            // IDE specific
+            'iml', 'ipr', 'iws'
         ])
     };
     // Download the bundled Python script (combine.py) and notify user to update paths
@@ -444,10 +495,44 @@
         }
         return r;
     };
-    const ign = p => { const pts = p.split('/'); if (pts.some(x => IGNORED.folders.has(x))) return true; const e = pts[pts.length - 1].split('.').pop().toLowerCase(); return IGNORED.exts.has(e); };
+    // Enhanced ignore function with better detection
+    const ign = p => { 
+        const pts = p.split('/'); 
+        
+        // Check if path contains ignored folders
+        if (pts.some(x => IGNORED.folders.has(x))) return true; 
+        
+        const filename = pts[pts.length - 1].toLowerCase();
+        
+        // Check for minified files (CRITICAL: Skip .min.js, .min.css, etc.)
+        if (filename.includes('.min.')) return true;
+        if (filename.includes('.bundle.')) return true;
+        if (filename.includes('.chunk.')) return true;
+        
+        // Check for specific IDE files
+        if (filename.startsWith('.') && filename !== '.gitignore') {
+            // Allow some dotfiles but skip most
+            const allowed = ['.env.example', '.editorconfig', '.prettierrc'];
+            if (!allowed.some(a => filename.includes(a))) return true;
+        }
+        
+        // Check extension
+        const e = filename.split('.').pop().toLowerCase();
+        return IGNORED.exts.has(e);
+    };
+    
     const isBinary = filename => {
         const ext = filename.split('.').pop().toLowerCase();
         return BINARY_EXTS.has(ext);
+    };
+    
+    // Check if file is likely minified/compiled (additional safety check)
+    const isMinified = filename => {
+        const lower = filename.toLowerCase();
+        return lower.includes('.min.') || 
+               lower.includes('.bundle.') || 
+               lower.includes('.chunk.') ||
+               lower.endsWith('.map'); // source maps
     };
     // Get icon for file or folder
     const ico = (name, isFolder) => {
@@ -669,11 +754,18 @@
         // ========================================
         const ext = name.split('.').pop().toLowerCase();
         const iconData = ICONS[ext] || ICONS['default'];
+        // Add specific class for better CSS targeting and visual effects
+        let specificClass = `${ext}-icon`;
+        // Group similar extensions for consistent styling
+        if (['jsx', 'tsx'].includes(ext)) specificClass += ' react-icon';
+        if (['vue', 'svelte'].includes(ext)) specificClass += ' framework-icon';
+        if (['scss', 'sass', 'less'].includes(ext)) specificClass += ' style-icon';
+        
         return {
             type: 'svg',
             url: ICON_BASE_URL + iconData.icon,
             color: iconData.color,
-            cls: `${ext}-icon`
+            cls: specificClass
         };
     };
     const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '<').replace(/>/g, '>');
