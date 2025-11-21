@@ -537,28 +537,229 @@
     // Get icon for file or folder
     const ico = (name, isFolder) => {
         if (isFolder) {
+            // Check for special folder names
+            const folderName = name.toLowerCase();
+            const folderIcon = FOLDER_ICONS[folderName] || FOLDER_ICONS['default'];
             return {
                 type: 'svg',
-                url: 'public/arrowRight.svg',
-                color: '',
+                url: ICON_BASE_URL + folderIcon.icon,
+                color: folderIcon.color,
                 cls: 'folder-icon'
             };
         }
-        // File icon by extension
+        // File icon
+        const fileName = name.toLowerCase();
+        // ========================================
+        // SPRING BOOT / JAVA SPECIAL FILES
+        // ========================================
+        if (fileName === 'pom.xml') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'maven.svg',
+                color: '#c71a36',
+                cls: 'maven-icon'
+            };
+        }
+        if (fileName === 'build.gradle' || fileName === 'build.gradle.kts' || fileName === 'settings.gradle' || fileName === 'settings.gradle.kts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'gradle.svg',
+                color: '#02303a',
+                cls: 'gradle-icon'
+            };
+        }
+        if (fileName === 'application.properties' || fileName === 'application.yml' || fileName === 'application.yaml') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'spring.svg',
+                color: '#6db33f',
+                cls: 'spring-icon'
+            };
+        }
+        if (fileName.startsWith('application-') && (fileName.endsWith('.properties') || fileName.endsWith('.yml') || fileName.endsWith('.yaml'))) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'spring.svg',
+                color: '#6db33f',
+                cls: 'spring-icon'
+            };
+        }
+        // ========================================
+        // PYTHON SPECIAL FILES
+        // ========================================
+        if (fileName === 'requirements.txt' || fileName === 'requirements-dev.txt') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+        if (fileName === 'setup.py' || fileName === 'setup.cfg') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+        if (fileName === 'pipfile' || fileName === 'pipfile.lock') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+        if (fileName === 'pyproject.toml') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'python.svg',
+                color: '#3776ab',
+                cls: 'python-icon'
+            };
+        }
+        if (fileName === 'manage.py') { // Django
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'django.svg',
+                color: '#092e20',
+                cls: 'django-icon'
+            };
+        }
+        // ========================================
+        // JAVASCRIPT/NODE SPECIAL FILES
+        // ========================================
+        if (fileName === 'package.json') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'nodejs.svg',
+                color: '#8cc84b',
+                cls: 'nodejs-icon'
+            };
+        }
+        if (fileName === 'package-lock.json') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'npm.svg',
+                color: '#cb3837',
+                cls: 'npm-icon'
+            };
+        }
+        if (fileName === 'yarn.lock') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'yarn.svg',
+                color: '#2c8ebb',
+                cls: 'yarn-icon'
+            };
+        }
+        if (fileName === 'tsconfig.json') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'typescript-def.svg',
+                color: '#3178c6',
+                cls: 'typescript-icon'
+            };
+        }
+        if (fileName === 'webpack.config.js' || fileName === 'webpack.config.ts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'webpack.svg',
+                color: '#8dd6f9',
+                cls: 'webpack-icon'
+            };
+        }
+        if (fileName === 'vite.config.js' || fileName === 'vite.config.ts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'vite.svg',
+                color: '#646cff',
+                cls: 'vite-icon'
+            };
+        }
+        if (fileName === 'next.config.js' || fileName === 'next.config.ts') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'next.svg',
+                color: '#000000',
+                cls: 'next-icon'
+            };
+        }
+        // ========================================
+        // GIT FILES
+        // ========================================
+        if (fileName === '.gitignore' || fileName === '.gitattributes' || fileName === '.gitmodules') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'git.svg',
+                color: '#f34f29',
+                cls: 'git-icon'
+            };
+        }
+        // ========================================
+        // DOCKER FILES
+        // ========================================
+        if (fileName === 'dockerfile' || fileName.startsWith('dockerfile.')) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'docker.svg',
+                color: '#0db7ed',
+                cls: 'docker-icon'
+            };
+        }
+        if (fileName === 'docker-compose.yml' || fileName === 'docker-compose.yaml') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'docker.svg',
+                color: '#0db7ed',
+                cls: 'docker-icon'
+            };
+        }
+        // ========================================
+        // ENV FILES
+        // ========================================
+        if (fileName.startsWith('.env')) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'tune.svg',
+                color: '#e7c547',
+                cls: 'env-icon'
+            };
+        }
+        // ========================================
+        // README FILES
+        // ========================================
+        if (fileName === 'readme.md' || fileName === 'readme' || fileName === 'readme.txt') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'readme.svg',
+                color: '#4caf50',
+                cls: 'readme-icon'
+            };
+        }
+        // ========================================
+        // LICENSE FILES
+        // ========================================
+        if (fileName === 'license' || fileName === 'license.md' || fileName === 'license.txt') {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'license.svg',
+                color: '#cbcb41',
+                cls: 'license-icon'
+            };
+        }
+        // ========================================
+        // GET BY EXTENSION (DEFAULT)
+        // ========================================
         const ext = name.split('.').pop().toLowerCase();
-        let url = '';
-        if (ext === 'js') url = 'public/contexticon.svg';
-        else if (ext === 'html') url = 'public/contexticon.svg';
-        else if (ext === 'css') url = 'public/contexticon.svg';
-        else if (ext === 'py') url = 'public/contexticon.svg';
-        else if (ext === 'md') url = 'public/contexticon.svg';
-        else url = 'public/contexticon.svg';
-        // You can add more mappings for other extensions if you add more icons
+        const iconData = ICONS[ext] || ICONS['default'];
+        
         return {
             type: 'svg',
-            url,
-            color: '',
-            cls: ''
+            url: ICON_BASE_URL + iconData.icon,
+            color: iconData.color,
+            cls: '' // No custom classes needed - icons are already colored
         };
     };
     const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '<').replace(/>/g, '>');
@@ -691,11 +892,10 @@
             const has = nd.t === 'd' && nd.kids.size > 0;
             const sz = nd.f ? bytes(nd.f.size) : '';
             acc.push({
-                html: `<div class="tree-item${nd.ig ? ' ignored' : ''}${has ? ' has-children' : ''}" data-path="${nd.full}">
+                html: `<div class="tree-item ${nd.ig ? 'ignored' : ''}" data-path="${nd.full}">
                     <div class="tree-item-content" data-level="${lv}">
-                        <span class="tree-lines">${Array(lv).fill('<span class=\'tree-vline\'></span>').join('')}</span>
                         <button class="expand-btn" style="visibility:${has ? 'visible' : 'hidden'}">
-                            <img src="public/arrowRight.svg" class="tree-arrow" alt=">" />
+                            <span class="material-symbols-outlined">chevron_right</span>
                         </button>
                         <div class="file-icon ${ic.cls}">
                             <img src="${ic.url}" alt="${nd.n}" class="vscode-icon" onerror="this.style.display='none'" />
@@ -1130,30 +1330,30 @@
     const dl = fmt => {
         if (!S.ctx) { toast('Generate first', 'warning'); return; }
         try {
-            if (S.isArray) {
-                const blob = new Blob(S.ctx, { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${S.root}-context.${fmt}`;
-                a.click();
-                URL.revokeObjectURL(url); // REVOKE URL IMMEDIATELY
-                toast(`Downloaded (${bytes(blob.size)})`, 'success');
-                // Explicitly clear S.ctx array after download if it was an array
-                S.ctx.length = 0;
-                S.ctx = null;
-                S.isArray = false;
-                return;
+            if (isFolder) {
+                return {
+                    type: 'svg',
+                    url: 'public/folder.svg', // Use your preferred folder icon SVG
+                    color: '',
+                    cls: 'folder-icon'
+                };
             }
-            const blob = new Blob([S.ctx], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${S.root}-context.${fmt}`;
-            a.click();
-            URL.revokeObjectURL(url); // REVOKE URL IMMEDIATELY
-            toast(`Downloaded (${bytes(blob.size)})`, 'success');
-            // Explicitly clear S.ctx string after download if it was a string
+            // File icon by extension
+            const ext = name.split('.').pop().toLowerCase();
+            let url = '';
+            if (ext === 'js') url = 'public/js.svg';
+            else if (ext === 'html') url = 'public/html.svg';
+            else if (ext === 'css') url = 'public/css.svg';
+            else if (ext === 'py') url = 'public/python.svg';
+            else if (ext === 'md') url = 'public/markdown.svg';
+            else url = 'public/file.svg';
+            // You can add more mappings for other extensions if you add more icons
+            return {
+                type: 'svg',
+                url,
+                color: '',
+                cls: ''
+            };
             S.ctx = null;
             S.isArray = false;
         } catch (e) {
@@ -1195,72 +1395,10 @@
             }
         };
         D.search.oninput = e => {
-            const q = e.target.value.trim().toLowerCase();
-            const allItems = Array.from(document.querySelectorAll('.tree-item'));
-            // Helper: get full path for a tree-item
-            const getPath = item => {
-                let path = '';
-                let cur = item;
-                while (cur && cur.classList.contains('tree-item')) {
-                    const name = cur.querySelector('.file-name')?.textContent || '';
-                    path = name + (path ? '/' + path : '');
-                    cur = cur.parentElement?.closest('.tree-item');
-                }
-                return path.toLowerCase();
-            };
-            // First, hide all
-            allItems.forEach(item => { item.style.display = 'none'; });
-            // If search is empty, show all
-            if (!q) {
-                allItems.forEach(item => { item.style.display = ''; });
-                // Collapse all folders
-                document.querySelectorAll('.tree-children').forEach(tc => tc.classList.remove('open'));
-                document.querySelectorAll('.expand-btn').forEach(btn => btn.classList.remove('expanded'));
-                document.querySelectorAll('.expand-btn .material-symbols-outlined').forEach(span => span.textContent = 'chevron_right');
-                return;
-            }
-            // Find all items that match (by name or path)
-            const matches = allItems.filter(item => {
-                const name = item.querySelector('.file-name')?.textContent.toLowerCase() || '';
-                const path = getPath(item);
-                return name.includes(q) || path.includes(q);
-            });
-            // Show all matches and their ancestors
-            const showSet = new Set();
-            matches.forEach(item => {
-                let cur = item;
-                while (cur && cur.classList.contains('tree-item')) {
-                    showSet.add(cur);
-                    cur = cur.parentElement?.closest('.tree-item');
-                }
-            });
-            allItems.forEach(item => {
-                if (showSet.has(item)) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            // Expand all folders that are ancestors of matches
-            document.querySelectorAll('.tree-children').forEach(tc => {
-                const parent = tc.parentElement;
-                if (parent && showSet.has(parent)) {
-                    tc.classList.add('open');
-                    const btn = parent.querySelector('.expand-btn');
-                    if (btn) {
-                        btn.classList.add('expanded');
-                        const span = btn.querySelector('.material-symbols-outlined');
-                        if (span) span.textContent = 'expand_more';
-                    }
-                } else {
-                    tc.classList.remove('open');
-                    const btn = parent?.querySelector('.expand-btn');
-                    if (btn) {
-                        btn.classList.remove('expanded');
-                        const span = btn.querySelector('.material-symbols-outlined');
-                        if (span) span.textContent = 'chevron_right';
-                    }
-                }
+            const q = e.target.value.toLowerCase();
+            document.querySelectorAll('.tree-item').forEach(item => {
+                const n = item.querySelector('.file-name').textContent.toLowerCase();
+                item.style.display = n.includes(q) ? '' : 'none';
             });
         };
         const togFold = o => {
