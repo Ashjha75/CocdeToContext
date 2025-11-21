@@ -135,6 +135,15 @@
                                 <span class="material-symbols-outlined">code</span>
                                 <strong id="languagesList">-</strong>
                             </span>
+                            <span class="separator">•</span>
+                            <span class="info-item">
+                                <span class="material-symbols-outlined">smart_toy</span>
+                                <select id="modelSelector" title="AI Model Template">
+                                    <option value="gpt">GPT-4</option>
+                                    <option value="claude">Claude</option>
+                                    <option value="gemini">Gemini</option>
+                                </select>
+                            </span>
                         </div>
                         <div class="editor-actions">
                             <button class="btn-action" id="copyBtn" title="Copy to Clipboard">
@@ -173,7 +182,7 @@
     <!-- LOADING OVERLAY -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <p>Processing files...</p>
+        <p id="loadingText">Processing files...</p>
     </div>
 
     <!-- TOAST NOTIFICATIONS -->
