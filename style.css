@@ -458,31 +458,24 @@ html, body {
     transition: all 0.2s ease;
 }
 
-/* File type specific icon colors - VSCode inspired */
-.file-icon.js-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(35deg) saturate(1.3); }
-.file-icon.ts-icon .vscode-icon { filter: brightness(1.15) sepia(0.35) hue-rotate(180deg) saturate(1.2); }
-.file-icon.py-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(170deg) saturate(1.3); }
-.file-icon.json-icon .vscode-icon { filter: brightness(1.3) sepia(0.4) hue-rotate(40deg) saturate(1.4); }
-.file-icon.md-icon .vscode-icon { filter: brightness(1.1) sepia(0.25) hue-rotate(200deg) saturate(1.2); }
-.file-icon.css-icon .vscode-icon { filter: brightness(1.15) sepia(0.35) hue-rotate(220deg) saturate(1.3); }
-.file-icon.html-icon .vscode-icon { filter: brightness(1.2) sepia(0.35) hue-rotate(350deg) saturate(1.3); }
-.file-icon.jsx-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(160deg) saturate(1.3); }
-.file-icon.tsx-icon .vscode-icon { filter: brightness(1.15) sepia(0.35) hue-rotate(185deg) saturate(1.2); }
-.file-icon.vue-icon .vscode-icon { filter: brightness(1.2) sepia(0.3) hue-rotate(110deg) saturate(1.4); }
+/* File icons - using native VSCode Material Icon Theme colors (no filters) */
+.file-icon .vscode-icon {
+    /* Icons are already colored from VSCode Material Icon Theme CDN */
+    opacity: 0.95;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
 
 /* Folder icon with animated state changes */
 .folder-icon .vscode-icon {
     width: 19px;
     height: 19px;
-    opacity: 0.85;
-    filter: brightness(1.05) sepia(0.2) hue-rotate(30deg) saturate(1.15);
+    opacity: 0.9;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Folder open state - brighter and more saturated */
+/* Folder open state - brighter */
 .expanded > .tree-item-content .folder-icon .vscode-icon {
     opacity: 1;
-    filter: brightness(1.2) sepia(0.3) hue-rotate(35deg) saturate(1.3);
     transform: scale(1.05);
 }
 
@@ -492,7 +485,7 @@ html, body {
 }
 
 .tree-item-content:hover .vscode-icon {
-    filter: brightness(1.35) !important;
+    opacity: 1;
     transform: scale(1.1);
 }
 

@@ -557,7 +557,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'maven.svg',
                 color: '#c71a36',
-                cls: 'maven-icon'
+                cls: ''
             };
         }
         if (fileName === 'build.gradle' || fileName === 'build.gradle.kts' || fileName === 'settings.gradle' || fileName === 'settings.gradle.kts') {
@@ -565,7 +565,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'gradle.svg',
                 color: '#02303a',
-                cls: 'gradle-icon'
+                cls: ''
             };
         }
         if (fileName === 'application.properties' || fileName === 'application.yml' || fileName === 'application.yaml') {
@@ -573,7 +573,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'spring.svg',
                 color: '#6db33f',
-                cls: 'spring-icon'
+                cls: ''
             };
         }
         if (fileName.startsWith('application-') && (fileName.endsWith('.properties') || fileName.endsWith('.yml') || fileName.endsWith('.yaml'))) {
@@ -581,7 +581,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'spring.svg',
                 color: '#6db33f',
-                cls: 'spring-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -592,7 +592,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'python.svg',
                 color: '#3776ab',
-                cls: 'python-icon'
+                cls: ''
             };
         }
         if (fileName === 'setup.py' || fileName === 'setup.cfg') {
@@ -600,7 +600,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'python.svg',
                 color: '#3776ab',
-                cls: 'python-icon'
+                cls: ''
             };
         }
         if (fileName === 'pipfile' || fileName === 'pipfile.lock') {
@@ -608,7 +608,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'python.svg',
                 color: '#3776ab',
-                cls: 'python-icon'
+                cls: ''
             };
         }
         if (fileName === 'pyproject.toml') {
@@ -616,7 +616,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'python.svg',
                 color: '#3776ab',
-                cls: 'python-icon'
+                cls: ''
             };
         }
         if (fileName === 'manage.py') { // Django
@@ -624,7 +624,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'django.svg',
                 color: '#092e20',
-                cls: 'django-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -635,7 +635,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'nodejs.svg',
                 color: '#8cc84b',
-                cls: 'nodejs-icon'
+                cls: ''
             };
         }
         if (fileName === 'package-lock.json') {
@@ -643,7 +643,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'npm.svg',
                 color: '#cb3837',
-                cls: 'npm-icon'
+                cls: ''
             };
         }
         if (fileName === 'yarn.lock') {
@@ -651,7 +651,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'yarn.svg',
                 color: '#2c8ebb',
-                cls: 'yarn-icon'
+                cls: ''
             };
         }
         if (fileName === 'tsconfig.json') {
@@ -659,7 +659,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'typescript-def.svg',
                 color: '#3178c6',
-                cls: 'typescript-icon'
+                cls: ''
             };
         }
         if (fileName === 'webpack.config.js' || fileName === 'webpack.config.ts') {
@@ -667,7 +667,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'webpack.svg',
                 color: '#8dd6f9',
-                cls: 'webpack-icon'
+                cls: ''
             };
         }
         if (fileName === 'vite.config.js' || fileName === 'vite.config.ts') {
@@ -675,7 +675,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'vite.svg',
                 color: '#646cff',
-                cls: 'vite-icon'
+                cls: ''
             };
         }
         if (fileName === 'next.config.js' || fileName === 'next.config.ts') {
@@ -683,7 +683,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'next.svg',
                 color: '#000000',
-                cls: 'next-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -694,7 +694,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'git.svg',
                 color: '#f34f29',
-                cls: 'git-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -705,7 +705,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'docker.svg',
                 color: '#0db7ed',
-                cls: 'docker-icon'
+                cls: ''
             };
         }
         if (fileName === 'docker-compose.yml' || fileName === 'docker-compose.yaml') {
@@ -713,7 +713,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'docker.svg',
                 color: '#0db7ed',
-                cls: 'docker-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -724,7 +724,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'tune.svg',
                 color: '#e7c547',
-                cls: 'env-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -735,7 +735,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'readme.svg',
                 color: '#4caf50',
-                cls: 'readme-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -746,7 +746,7 @@
                 type: 'svg',
                 url: ICON_BASE_URL + 'license.svg',
                 color: '#cbcb41',
-                cls: 'license-icon'
+                cls: ''
             };
         }
         // ========================================
@@ -754,18 +754,12 @@
         // ========================================
         const ext = name.split('.').pop().toLowerCase();
         const iconData = ICONS[ext] || ICONS['default'];
-        // Add specific class for better CSS targeting and visual effects
-        let specificClass = `${ext}-icon`;
-        // Group similar extensions for consistent styling
-        if (['jsx', 'tsx'].includes(ext)) specificClass += ' react-icon';
-        if (['vue', 'svelte'].includes(ext)) specificClass += ' framework-icon';
-        if (['scss', 'sass', 'less'].includes(ext)) specificClass += ' style-icon';
         
         return {
             type: 'svg',
             url: ICON_BASE_URL + iconData.icon,
             color: iconData.color,
-            cls: specificClass
+            cls: '' // No custom classes needed - icons are already colored
         };
     };
     const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '<').replace(/>/g, '>');
