@@ -1398,6 +1398,11 @@
             }
         }
 
+        // Add closing tags for Claude format
+        if (S.model === 'claude') {
+            parts.push('</source_files>\n</context>\n');
+        }
+
         await new Promise(r => setTimeout(r, 0));
 
         const blob = new Blob(parts, { type: 'text/plain' });
@@ -1494,6 +1499,13 @@
         if (D.model) {
             D.model.addEventListener('change', () => {
                 S.model = D.model.value;
+                const templates = {
+                    gpt: '📝 GPT-4: Markdown format with clear code blocks and instructions',
+                    claude: '🤖 Claude: XML-structured context with semantic tags for better understanding',
+                    gemini: '✨ Gemini: Hybrid format with metadata and organized sections'
+                };
+                console.log(`%c${templates[S.model]}`, 'color:#10b981;font-weight:bold');
+                toast(`Template: ${S.model.toUpperCase()}`, 'info');
             });
         }
         // Optimize file input change handler
