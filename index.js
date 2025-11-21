@@ -690,6 +690,171 @@
                 cls: 'webpack-icon'
             };
         }
+        // =============================
+        // NEXT.JS
+        // =============================
+        if (
+            fileName === 'next.config.js' ||
+            fileName === 'next.config.ts' ||
+            fileName === 'next-env.d.ts' ||
+            fileName === 'middleware.js' ||
+            fileName === 'middleware.ts' ||
+            fileName === 'middleware.tsx' ||
+            fileName === 'middleware.mjs' ||
+            fileName === 'middleware.cjs'
+        ) {
+            return {
+                type: 'svg',
+                url: 'public/nextjs.svg',
+                color: '#000000',
+                cls: 'nextjs-icon'
+            };
+        }
+        // =============================
+        // SPRING BOOT & ECOSYSTEM
+        // =============================
+        if (
+            fileName === 'spring-boot-starter-parent.pom' ||
+            fileName === 'spring.factories' ||
+            fileName === 'application.properties' ||
+            fileName === 'application.yml' ||
+            fileName === 'application.yaml' ||
+            fileName.endsWith('.spring')
+        ) {
+            return {
+                type: 'svg',
+                url: 'public/springboot.svg',
+                color: '#6db33f',
+                cls: 'springboot-icon'
+            };
+        }
+        // =============================
+        // ANGULAR
+        // =============================
+        if (
+            fileName === 'angular.json' ||
+            fileName === 'angular-cli.json' ||
+            fileName === 'main.ts' ||
+            fileName === 'polyfills.ts' ||
+            fileName === 'test.ts' ||
+            fileName === 'tsconfig.app.json' ||
+            fileName === 'tsconfig.spec.json' ||
+            fileName === 'karma.conf.js' ||
+            fileName === 'karma.conf.ts' ||
+            fileName === 'protractor.conf.js' ||
+            fileName === 'protractor.conf.ts'
+        ) {
+            return {
+                type: 'svg',
+                url: 'public/angular.svg',
+                color: '#dd0031',
+                cls: 'angular-icon'
+            };
+        }
+        // =============================
+        // EXPRESS.JS
+        // =============================
+        if (
+            fileName === 'app.js' ||
+            fileName === 'app.ts' ||
+            fileName === 'server.js' ||
+            fileName === 'server.ts' ||
+            fileName === 'express.js' ||
+            fileName === 'express.ts'
+        ) {
+            return {
+                type: 'svg',
+                url: 'public/express.svg',
+                color: '#000000',
+                cls: 'express-icon'
+            };
+        }
+        // =============================
+        // SQL
+        // =============================
+        if (
+            fileName.endsWith('.sql') ||
+            fileName.endsWith('.sqlite') ||
+            fileName.endsWith('.sqlite3')
+        ) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'database.svg',
+                color: '#e38c00',
+                cls: 'sql-icon'
+            };
+        }
+        // =============================
+        // DOCKER
+        // =============================
+        if (
+            fileName === 'dockerfile' ||
+            fileName.startsWith('dockerfile.') ||
+            fileName === 'docker-compose.yml' ||
+            fileName === 'docker-compose.yaml'
+        ) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'docker.svg',
+                color: '#0db7ed',
+                cls: 'docker-icon'
+            };
+        }
+        // =============================
+        // KUBERNETES
+        // =============================
+        if (
+            fileName === 'kubernetes.yaml' ||
+            fileName === 'kubernetes.yml' ||
+            fileName.endsWith('.k8s.yaml') ||
+            fileName.endsWith('.k8s.yml') ||
+            fileName === 'deployment.yaml' ||
+            fileName === 'deployment.yml' ||
+            fileName === 'service.yaml' ||
+            fileName === 'service.yml' ||
+            fileName === 'pod.yaml' ||
+            fileName === 'pod.yml'
+        ) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'kubernetes.svg',
+                color: '#326ce5',
+                cls: 'k8s-icon'
+            };
+        }
+        // =============================
+        // AWS
+        // =============================
+        if (
+            fileName === 'aws.json' ||
+            fileName === 'aws.yml' ||
+            fileName === 'aws.yaml' ||
+            fileName === 'cloudformation.yml' ||
+            fileName === 'cloudformation.yaml' ||
+            fileName === 'template.yml' ||
+            fileName === 'template.yaml' ||
+            fileName.endsWith('.aws.json') ||
+            fileName.endsWith('.aws.yml') ||
+            fileName.endsWith('.aws.yaml')
+        ) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'aws.svg',
+                color: '#ff9900',
+                cls: 'aws-icon'
+            };
+        }
+        // =============================
+        // ENV FILES
+        // =============================
+        if (fileName.startsWith('.env')) {
+            return {
+                type: 'svg',
+                url: ICON_BASE_URL + 'tune.svg',
+                color: '#e7c547',
+                cls: 'env-icon'
+            };
+        }
         if (fileName === 'vite.config.js' || fileName === 'vite.config.ts') {
             return {
                 type: 'svg',
