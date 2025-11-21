@@ -2030,24 +2030,112 @@
                 }, false);
             });
             
-            // Handle dropped files
-            document.addEventListener('drop', e => {
+            // Handle dropped items (folders/files)
+            document.addEventListener('drop', async e => {
                 dragDropZone.classList.remove('drag-over');
                 
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    // Hide drag-drop zone and show editor
-                    dragDropZone.style.display = 'none';
-                    if (codeEditor) codeEditor.style.display = 'block';
-                    
-                    // Show loader IMMEDIATELY
-                    load(true, 'Loading dropped files...');
-                    // Process files in next tick to let loader render
-                    setTimeout(() => loadFiles(files), 0);
-                } else {
-                    toast('Please drop a folder with files', 'warning');
+                const items = e.dataTransfer.items;
+                if (!items || items.length === 0) {
+                    toast('No items detected. Please try using "Select Directory" button', 'warning');
+                    return;
                 }
+                
+                // Hide drag-drop zone and show editor
+                dragDropZone.style.display = 'none';
+                if (codeEditor) codeEditor.style.display = 'block';
+                
+                // Show loader IMMEDIATELY
+                load(true, 'Processing dropped folder...');
+                
+                // Process dropped items
+                const allFiles = [];
+                
+                // Use webkitGetAsEntry for folder support
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i].webkitGetAsEntry();
+                    if (item) {
+                        if (item.isDirectory) {
+                            await traverseDirectory(item, '', allFiles);
+                        } else if (item.isFile) {
+                            const file = items[i].getAsFile();
+                            if (file) {
+                                // Add webkitRelativePath property
+                                Object.defineProperty(file, 'webkitRelativePath', {
+                                    value: file.name,
+                                    writable: false
+                                });
+                                allFiles.push(file);
+                            }
+                        }
+                    }
+                }
+                
+                if (allFiles.length === 0) {
+                    toast('No files found in dropped folder', 'warning');
+                    load(false);
+                    dragDropZone.style.display = 'flex';
+                    if (codeEditor) codeEditor.style.display = 'none';
+                    return;
+                }
+                
+                // Create a FileList-like object
+                const fileList = {
+                    length: allFiles.length,
+                    item: i => allFiles[i],
+                    [Symbol.iterator]: function* () {
+                        for (let i = 0; i < allFiles.length; i++) {
+                            yield allFiles[i];
+                        }
+                    }
+                };
+                
+                // Add array access
+                allFiles.forEach((file, idx) => {
+                    fileList[idx] = file;
+                });
+                
+                // Process files
+                setTimeout(() => loadFiles(fileList), 0);
             }, false);
+            
+            // Recursive function to traverse directory structure
+            async function traverseDirectory(entry, path, files) {
+                if (entry.isFile) {
+                    return new Promise((resolve) => {
+                        entry.file(file => {
+                            // Add webkitRelativePath property
+                            const relativePath = path + file.name;
+                            Object.defineProperty(file, 'webkitRelativePath', {
+                                value: relativePath,
+                                writable: false
+                            });
+                            files.push(file);
+                            resolve();
+                        });
+                    });
+                } else if (entry.isDirectory) {
+                    const dirReader = entry.createReader();
+                    return new Promise((resolve) => {
+                        const readEntries = () => {
+                            dirReader.readEntries(async entries => {
+                                if (entries.length === 0) {
+                                    resolve();
+                                    return;
+                                }
+                                for (const childEntry of entries) {
+                                    await traverseDirectory(
+                                        childEntry,
+                                        path + entry.name + '/',
+                                        files
+                                    );
+                                }
+                                readEntries(); // Continue reading if there are more entries
+                            });
+                        };
+                        readEntries();
+                    });
+                }
+            }
             
             // Click on zone to trigger folder selection
             dragDropZone.addEventListener('click', () => {
