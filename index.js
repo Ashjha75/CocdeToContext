@@ -1033,11 +1033,34 @@
             const textFiles = [];
             const binaryFiles = []; // This list is now only for stats/display in the tree, not for content inclusion
             files.forEach(f => {
+                // Skip binary files
                 if (isBinary(f.name)) {
-                    binaryFiles.push(f); // Keep for tree display, but not for content generation
-                } else {
-                    textFiles.push(f); // Only these will be read and included in the context
+                    binaryFiles.push(f);
+                    return;
                 }
+                
+                // Skip minified/compiled files
+                if (isMinified(f.name)) {
+                    console.log('Skipping minified file:', f.name);
+                    return;
+                }
+                
+                // Skip files that shouldn't be in output
+                const filename = f.name.toLowerCase();
+                
+                // Skip SVG files (can contain binary/encoded data)
+                if (filename.endsWith('.svg')) {
+                    binaryFiles.push(f);
+                    return;
+                }
+                
+                // Skip large files that might be compiled/minified
+                if (f.size > 500 * 1024) { // 500KB
+                    console.log('Skipping large file (possibly compiled):', f.name, bytes(f.size));
+                    return;
+                }
+                
+                textFiles.push(f);
             });
 
             const totalTextSize = textFiles.reduce((s, f) => s + f.size, 0);
@@ -1073,9 +1096,41 @@
                 );
                 results.forEach((result, idx) => {
                     if (result.status === 'fulfilled') {
+                        const content = result.value;
+                        const path = batch[idx].path;
+                        const filename = batch[idx].name;
+                        
+                        // Validate content is actually text (not binary disguised as text)
+                        // Check for null bytes or high ratio of non-printable characters
+                        if (content.indexOf('\0') !== -1) {
+                            console.warn('Skipping file with null bytes (binary):', filename);
+                            failed++;
+                            return;
+                        }
+                        
+                        // Skip if content looks like base64 encoded data (common in compiled files)
+                        const lines = content.split('\n');
+                        const longBase64Lines = lines.filter(line => 
+                            line.length > 200 && /^[A-Za-z0-9+/=]+$/.test(line.trim())
+                        ).length;
+                        
+                        if (longBase64Lines > 10) {
+                            console.warn('Skipping file with encoded data:', filename);
+                            failed++;
+                            return;
+                        }
+                        
+                        // Skip extremely long single lines (typical of minified code)
+                        const hasVeryLongLine = lines.some(line => line.length > 10000);
+                        if (hasVeryLongLine) {
+                            console.warn('Skipping file with very long lines (minified):', filename);
+                            failed++;
+                            return;
+                        }
+                        
                         contents.push({
-                            path: batch[idx].path,
-                            content: result.value
+                            path: path,
+                            content: content
                         });
                     } else {
                         console.warn('Skip', batch[idx].name, result.reason);
@@ -1165,12 +1220,39 @@
             );
             results.forEach((result, idx) => {
                 if (result.status === 'fulfilled') {
+                    const content = result.value;
                     const p = batch[idx].path;
-                    parts.push(`=== FILE: ${getFullPath(p)} ===\n`);
-                    parts.push(`<document path="${p}">\n`, result.value, '\n</document>\n');
+                    const filename = batch[idx].name;
+                    
+                    // Same validation as in gen() function
+                    // Skip files with null bytes (binary disguised as text)
+                    if (content.indexOf('\0') !== -1) {
+                        console.warn('Download: Skipping file with null bytes:', filename);
+                        return;
+                    }
+                    
+                    // Skip base64 encoded content
+                    const lines = content.split('\n');
+                    const longBase64Lines = lines.filter(line => 
+                        line.length > 200 && /^[A-Za-z0-9+/=]+$/.test(line.trim())
+                    ).length;
+                    
+                    if (longBase64Lines > 10) {
+                        console.warn('Download: Skipping file with encoded data:', filename);
+                        return;
+                    }
+                    
+                    // Skip minified files (very long single lines)
+                    const hasVeryLongLine = lines.some(line => line.length > 10000);
+                    if (hasVeryLongLine) {
+                        console.warn('Download: Skipping minified file:', filename);
+                        return;
+                    }
+                    
+                    parts.push('=== FILE: ' + getFullPath(p) + ' ===\n');
+                    parts.push('<document path="' + p + '">\n', content, '\n</document>\n');
+                    
                     // OPTIMIZE: Nullify the file reference from S.files after reading to help GC
-                    // Find the corresponding file in S.files and nullify its 'file' property
-                    // This is crucial for memory management during large downloads
                     const sFileIndex = S.files.findIndex(sf => sf.path === p);
                     if (sFileIndex !== -1) {
                         S.files[sFileIndex].file = null; // Release the File object reference
