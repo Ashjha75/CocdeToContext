@@ -971,6 +971,7 @@
                 current.classList.add('open');
                 const parentItem = current.parentElement;
                 if (parentItem && parentItem.classList.contains('tree-item')) {
+                    parentItem.style.display = '';
                     const btn = parentItem.querySelector('.expand-btn');
                     if (btn) {
                         btn.classList.add('expanded');
