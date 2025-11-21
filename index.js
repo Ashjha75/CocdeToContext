@@ -369,7 +369,8 @@
     };
     const D = {
         side: $safe('sidebar'), tog: $safe('toggleSidebar'), tree: $safe('fileTree'),
-        search: $safe('fileSearch'), sel: $safe('selectDirBtn'),
+        search: $safe('fileSearch'), searchMeta: $safe('searchMeta'), searchClear: $safe('searchClear'),
+        sel: $safe('selectDirBtn'),
         exp: $safe('expandAll'), col: $safe('collapseAll'),
         all: $safe('selectAll'), none: $safe('deselectAll'),
         gen: $safe('generateContextBtn'), ed: $safe('codeEditor'),
@@ -867,6 +868,8 @@
                 D.tok.textContent = '0';
                 D.sz.textContent = '0 B';
                 D.pron.textContent = 'zero tokens';
+                if (D.search) D.search.value = '';
+                updateTreeSearch('');
                 D.lang.textContent = '-';
                 // Clear search
                 D.search.value = '';
@@ -960,6 +963,57 @@
     };
     // Pass parents array for lines
     const renderSub = (nodes, lv, parents) => render(nodes, lv, [], parents).map(x => x.html).join('');
+
+    const openTreeParents = item => {
+        let current = item.parentElement;
+        while (current) {
+            if (current.classList && current.classList.contains('tree-children')) {
+                current.classList.add('open');
+                const parentItem = current.parentElement;
+                if (parentItem && parentItem.classList.contains('tree-item')) {
+                    const btn = parentItem.querySelector('.expand-btn');
+                    if (btn) {
+                        btn.classList.add('expanded');
+                        const arrowImg = btn.querySelector('.tree-arrow');
+                        if (arrowImg) {
+                            arrowImg.src = 'public/arrowDown.svg';
+                            arrowImg.setAttribute('data-arrow', 'down');
+                        }
+                    }
+                }
+                current = parentItem ? parentItem.parentElement : null;
+                continue;
+            }
+            current = current.parentElement;
+        }
+    };
+
+    const updateTreeSearch = query => {
+        const term = (query || '').trim().toLowerCase();
+        const items = document.querySelectorAll('.tree-item');
+        let matches = 0;
+        const total = items.length;
+        items.forEach(item => {
+            const nameEl = item.querySelector('.file-name');
+            const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+            const path = (item.dataset.path || '').toLowerCase();
+            const match = !term || name.includes(term) || path.includes(term);
+            item.style.display = match ? '' : 'none';
+            item.classList.toggle('search-match', !!term && match);
+            if (term && match) {
+                matches += 1;
+                openTreeParents(item);
+            }
+        });
+        if (D.searchMeta) {
+            D.searchMeta.textContent = term
+                ? `${matches} match${matches === 1 ? '' : 'es'} of ${total}`
+                : 'Search file and folder names (case-insensitive)';
+        }
+        if (D.searchClear) {
+            D.searchClear.hidden = !term;
+        }
+    };
     // ============================================================================
     // FILE LOADING - ASYNC CHUNKS (ENHANCED FILTERING & UI UPDATE)
     // ============================================================================
@@ -1023,6 +1077,7 @@
             const items = render(S.tree);
             D.tree.innerHTML = items.map(x => x.html).join('');
             S.rendered = items.length;
+            if (D.search) updateTreeSearch(D.search.value);
             stats();
             toast(`Loaded ${S.files.length} files`, 'success');
         } catch (e) {
@@ -1576,13 +1631,25 @@
                 stats();
             }
         };
-        if (D.search) D.search.addEventListener('input', e => {
-            const q = e.target.value.toLowerCase();
-            document.querySelectorAll('.tree-item').forEach(item => {
-                const n = item.querySelector('.file-name').textContent.toLowerCase();
-                item.style.display = n.includes(q) ? '' : 'none';
+        if (D.search) {
+            D.search.addEventListener('input', e => updateTreeSearch(e.target.value));
+            D.search.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    e.target.value = '';
+                    updateTreeSearch('');
+                }
             });
-        });
+        }
+        if (D.searchClear) {
+            D.searchClear.hidden = true;
+            D.searchClear.addEventListener('click', () => {
+                if (D.search) {
+                    D.search.value = '';
+                    updateTreeSearch('');
+                    D.search.focus();
+                }
+            });
+        }
         const togFold = o => {
             document.querySelectorAll('.expand-btn').forEach(btn => {
                 const item = btn.closest('.tree-item');

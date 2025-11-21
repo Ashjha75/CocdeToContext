@@ -75,8 +75,12 @@
                 </div>
 
                 <div class="search-box">
-                    <span class="material-symbols-outlined">search</span>
-                    <input type="text" id="fileSearch" placeholder="Search files..." class="search-input">
+                    <div class="search-field">
+                        <span class="material-symbols-outlined">search</span>
+                        <input type="text" id="fileSearch" placeholder="Search files or folders" class="search-input" autocomplete="off">
+                        <button type="button" class="search-clear" id="searchClear" aria-label="Clear search">×</button>
+                    </div>
+                    <small class="search-meta" id="searchMeta">Search file and folder names (case-insensitive)</small>
                 </div>
 
                 <div class="sidebar-select">
