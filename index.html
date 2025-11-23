@@ -142,11 +142,15 @@
                             </span>
                             <span class="separator">•</span>
                             <span class="info-item">
-                                <!-- <span class="material-symbols-outlined">smart_toy</span> -->
+                                <div class="model-logos" id="modelLogos" aria-hidden="true">
+                                    <img src="public/gemini.png" alt="Gemini" data-model="gemini" class="model-logo" />
+                                    <img src="public/gpt.png" alt="GPT" data-model="gpt" class="model-logo" />
+                                    <img src="public/claude.png" alt="Claude" data-model="claude" class="model-logo" />
+                                </div>
                                 <select id="modelSelector" title="Choose AI model format - optimizes output structure for each AI">
+                                    <option value="gemini" title="Hybrid format with metadata">Gemini (Hybrid)</option>
                                     <option value="gpt" title="Markdown format with clear code blocks">GPT-4 (Markdown)</option>
                                     <option value="claude" title="XML format with structured context">Claude (XML)</option>
-                                    <option value="gemini" title="Hybrid format with metadata">Gemini (Hybrid)</option>
                                 </select>
                             </span>
                         </div>

@@ -1494,7 +1494,7 @@ Your goal: deliver precise, production-grade patches with the smallest necessary
             const parts = [];
             // === AI Model Template Logic ===
             if (S.model === 'gpt') {
-                parts.push('# 🤖 PROJECT CONTEXT FOR GPT-4\n');
+                parts.push('# <span class="material-symbols-outlined">smart_toy</span> PROJECT CONTEXT FOR GPT-4\n');
                 parts.push('='.repeat(80) + '\n\n');
                 
                 parts.push('## 📋 METADATA\n');
@@ -1683,7 +1683,7 @@ Your goal: deliver precise, production-grade patches with the smallest necessary
         
         // Add model-specific headers for download
         if (S.model === 'gpt') {
-            parts.push('# 🤖 PROJECT CONTEXT FOR GPT-4\n');
+            parts.push('# <span class="material-symbols-outlined">smart_toy</span> PROJECT CONTEXT FOR GPT-4\n');
             parts.push('='.repeat(80) + '\n\n');
             
             parts.push('## 📋 METADATA\n');
@@ -1976,14 +1976,40 @@ Your goal: deliver precise, production-grade patches with the smallest necessary
                 S.model = D.model.value;
                 const templates = {
                     gpt: '📝 GPT-4: Markdown format with clear code blocks and instructions',
-                    claude: '🤖 Claude: XML-structured context with semantic tags for better understanding',
+                    claude: 'Claude: XML-structured context with semantic tags for better understanding',
                     gemini: '✨ Gemini: Hybrid format with metadata and organized sections'
                 };
+                // highlight corresponding logo if present
+                try {
+                    const logos = document.querySelectorAll('.model-logo');
+                    logos.forEach(l => l.classList.toggle('selected', l.dataset.model === S.model));
+                } catch (e) { /* ignore */ }
                 console.log(`%c${templates[S.model]}`, 'color:#10b981;font-weight:bold');
                 toast(`Template: ${S.model.toUpperCase()}`, 'info');
             });
+
+            // helper exposed to window so inline markup can use it
+            window.selectModel = m => {
+                if (!D.model) return;
+                D.model.value = m;
+                D.model.dispatchEvent(new Event('change'));
+            };
         }
         
+        // wire model-logo clicks and initial highlight (if the inline images are present)
+        try {
+            const logos = document.querySelectorAll('.model-logo');
+            logos.forEach(img => {
+                img.addEventListener('click', () => {
+                    const m = img.dataset.model;
+                    if (m && window.selectModel) window.selectModel(m);
+                });
+            });
+            // initial highlight based on select value or state
+            const initial = D.model ? D.model.value : S.model;
+            logos.forEach(l => l.classList.toggle('selected', l.dataset.model === initial));
+        } catch (e) { /* ignore if DOM not ready */ }
+
         // Drag and Drop functionality on main content area
         const dragDropZone = $('dragDropZone');
         const dragDropOverlay = $('dragDropOverlay');

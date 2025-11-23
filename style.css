@@ -22,6 +22,33 @@
     border-color: #fbbf24;
     box-shadow: 0 0 0 3px rgba(251,187,36,0.08);
 }
+/* Model logo strip next to the selector */
+.model-logos {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 8px;
+}
+.model-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+    border: 1px solid transparent;
+    background: rgba(255,255,255,0.02);
+}
+.model-logo:hover {
+    transform: translateY(-2px) scale(1.02);
+    opacity: 1;
+}
+.model-logo.selected {
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.08);
+    border-color: rgba(16,185,129,0.18);
+    opacity: 1;
+}
 /* Only sidebar main action icons (Select Directory, Create Context) black and small */
 .sidebar-btn-icon {
     width: 20px;
