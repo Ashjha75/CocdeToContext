@@ -149,7 +149,7 @@
     // Download the bundled Python script (combine.py) and notify user to update paths
     const downloadPythonScript = async () => {
         try {
-            const res = await fetch('combine.py');
+                const res = await fetch('combine.py'); // Fetch the Python script
             if (!res.ok) throw new Error('Failed to fetch combine.py');
             const txt = await res.text();
             const blob = new Blob([txt], { type: 'text/x-python' });
@@ -1564,18 +1564,10 @@ Your goal: deliver precise, production-grade patches with the smallest necessary
                 
                 // Use unified human-readable header for Gemini output
                 parts.push('## 🎯 SYSTEM PROMPT\n');
-                parts.push('1. **Complete Context**: This is the FULL and AUTHORITATIVE codebase\n');
-                parts.push('2. **Analyze Thoroughly**: Understand architecture, patterns, and dependencies\n');
-                parts.push('3. **Maintain Consistency**: Follow existing code style and conventions\n');
-                parts.push('4. **Reference Precisely**: Always cite specific file paths\n');
-                parts.push('5. **Think Holistically**: Consider the entire project ecosystem\n');
-                parts.push('6. **Respect Patterns**: Honor established design patterns and practices\n\n');
                 
-                parts.push('**📝 Data Format:**\n\n');
-                parts.push('- Each file includes full path and language identifier\n');
-                parts.push('- Project structure provided for navigation\n');
-                parts.push('- All content is unmodified source code\n');
-                parts.push('- Syntax highlighting applied per language\n\n');
+                parts.push('```\n');
+                parts.push(CUSTOM_SYSTEM_PROMPT + '\n');
+                parts.push('```\n\n');
                 
                 parts.push('═'.repeat(80) + '\n');
                 parts.push('## 🗂️ PROJECT STRUCTURE\n\n');
@@ -1759,20 +1751,10 @@ Your goal: deliver precise, production-grade patches with the smallest necessary
             parts.push('\n');
             
                 parts.push('## 🎯 SYSTEM PROMPT\n\n');
-            parts.push('> **Role**: Expert Software Engineer and Code Analyst\n\n');
-            parts.push('**📌 Key Instructions:**\n\n');
-            parts.push('1. **Complete Context**: This is the FULL and AUTHORITATIVE codebase\n');
-            parts.push('2. **Analyze Thoroughly**: Understand architecture, patterns, and dependencies\n');
-            parts.push('3. **Maintain Consistency**: Follow existing code style and conventions\n');
-            parts.push('4. **Reference Precisely**: Always cite specific file paths\n');
-            parts.push('5. **Think Holistically**: Consider the entire project ecosystem\n');
-            parts.push('6. **Respect Patterns**: Honor established design patterns and practices\n\n');
             
-            parts.push('**📝 Data Format:**\n\n');
-            parts.push('- Each file includes full path and language identifier\n');
-            parts.push('- Project structure provided for navigation\n');
-            parts.push('- All content is unmodified source code\n');
-            parts.push('- Syntax highlighting applied per language\n\n');
+            parts.push('```\n');
+            parts.push(CUSTOM_SYSTEM_PROMPT + '\n');
+            parts.push('```\n\n');
             
             parts.push('═'.repeat(80) + '\n');
             parts.push('## 🗂️ PROJECT STRUCTURE\n\n');
