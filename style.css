@@ -38,15 +38,16 @@
     opacity: 0.85;
     transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
     border: 1px solid transparent;
-    background: rgba(255,255,255,0.02);
+    background: rgba(164, 38, 38, 0.02);
 }
 .model-logo:hover {
     transform: translateY(-2px) scale(1.02);
     opacity: 1;
 }
 .model-logo.selected {
-    box-shadow: 0 0 0 3px rgba(16,185,129,0.08);
-    border-color: rgba(16,185,129,0.18);
+   
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+    border-color: rgba(105,128,197,0.18);
     opacity: 1;
 }
 /* Only sidebar main action icons (Select Directory, Create Context) black and small */

@@ -1494,7 +1494,6 @@ Your goal: deliver precise, production-grade patches with the smallest necessary
             const parts = [];
             // === AI Model Template Logic ===
             if (S.model === 'gpt') {
-                parts.push('# <span class="material-symbols-outlined">smart_toy</span> PROJECT CONTEXT FOR GPT-4\n');
                 parts.push('='.repeat(80) + '\n\n');
                 
                 parts.push('## 📋 METADATA\n');
@@ -1683,7 +1682,6 @@ Your goal: deliver precise, production-grade patches with the smallest necessary
         
         // Add model-specific headers for download
         if (S.model === 'gpt') {
-            parts.push('# <span class="material-symbols-outlined">smart_toy</span> PROJECT CONTEXT FOR GPT-4\n');
             parts.push('='.repeat(80) + '\n\n');
             
             parts.push('## 📋 METADATA\n');
