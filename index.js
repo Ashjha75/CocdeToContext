@@ -955,8 +955,49 @@
         .replace(/\"/g, '&quot;')
         .replace(/'/g, '&apos;');
 
-    // XML-specific escape (alias for clarity)
-    const xmlEscape = esc;
+     // XML-specific escape (alias for clarity)
+     const xmlEscape = esc;
+
+     const CUSTOM_SYSTEM_PROMPT = `why cant you understand my words
+You are a senior software engineer assisting with a single-file codebase.
+Your task: read the provided file/snippet, understand the user request, and produce safe, minimal, high-quality changes.
+
+Rules:
+1. Priorities:
+    a) Correctness and safety
+    b) Minimal, targeted diff
+    c) Maintainability and clarity
+    d) Tests when relevant
+
+2. For every task, output in this order:
+    DIAGNOSIS
+    PATCH (unified diff or full replacement if required)
+    TESTS (only if meaningful)
+    VERIFY STEPS (commands + expected result)
+    COMMIT/PR (one-line commit + short PR description)
+    NOTES (optional, very brief)
+
+3. Patch guidelines:
+    - Keep behavior backward-compatible unless user requests otherwise.
+    - Do not introduce unnecessary refactors or unrelated improvements.
+    - Use idiomatic, modern patterns for the project’s main language.
+    - Keep changes small and self-contained.
+    - Comment only for non-obvious logic.
+
+4. Assumptions:
+    - Treat the provided file as the full context unless stated.
+    - If constraints or missing details exist, state assumptions clearly.
+    - Only add files (e.g., tests) when justified.
+
+5. Testing:
+    - Provide minimal unit/integration tests that demonstrate correctness.
+    - Use the language’s standard test framework when obvious.
+
+6. Communication style:
+    - Concise, technical, code-first.
+    - No chit-chat, no emotional language.
+
+Your goal: deliver precise, production-grade patches with the smallest necessary changes, clear reasoning, and verifiable steps.`;
     // ============================================================================
     // CUSTOM MODAL - NO ALERTS
     // ============================================================================
@@ -1467,19 +1508,7 @@
                 
                 parts.push('## 🎯 SYSTEM PROMPT\n');
                 parts.push('```\n');
-                parts.push('You are an expert software engineer analyzing a complete codebase.\n\n');
-                parts.push('INSTRUCTIONS:\n');
-                parts.push('- Treat this as the COMPLETE and AUTHORITATIVE source of truth for this project\n');
-                parts.push('- Analyze the code structure, architecture, and design patterns\n');
-                parts.push('- Understand dependencies and relationships between files\n');
-                parts.push('- Maintain consistency with existing code patterns and conventions\n');
-                parts.push('- Always reference specific file paths when discussing code\n');
-                parts.push('- Consider the project holistically before making suggestions\n');
-                parts.push('- Respect the established coding style and naming conventions\n\n');
-                parts.push('DATA FORMAT:\n');
-                parts.push('- Each file is presented with its full path and language\n');
-                parts.push('- Code blocks use appropriate syntax highlighting\n');
-                parts.push('- The project structure is provided first for context\n');
+                parts.push(CUSTOM_SYSTEM_PROMPT + '\n');
                 parts.push('```\n\n');
                 
                 parts.push('## 📁 PROJECT STRUCTURE\n```\n', struct, '```\n\n');
@@ -1505,27 +1534,9 @@
                 parts.push(`  </languages>\n`);
                 parts.push('</metadata>\n\n');
                 
-                // Human-readable header (XML-safe comment) to mark the system prompt section
-                parts.push('<!-- 🎯 SYSTEM PROMPT -->\n');
-                // Human-readable header (XML-safe comment) to mark the system prompt section
                 parts.push('<!-- 🎯 SYSTEM PROMPT -->\n');
                 parts.push('<system_prompt>\n');
-                parts.push('  <role>Expert Software Engineer</role>\n');
-                parts.push('  <task>Analyze and work with this complete codebase</task>\n');
-                parts.push('  <instructions>\n');
-                parts.push('    - This is the COMPLETE and AUTHORITATIVE codebase\n');
-                parts.push('    - Analyze architecture, patterns, and code organization\n');
-                parts.push('    - Understand file dependencies and relationships\n');
-                parts.push('    - Maintain existing code style and conventions\n');
-                parts.push('    - Reference specific file paths in your responses\n');
-                parts.push('    - Think holistically about the entire project\n');
-                parts.push('    - Respect established patterns and best practices\n');
-                parts.push('  </instructions>\n');
-                parts.push('  <data_format>\n');
-                parts.push('    - Files are in XML format with path and language metadata\n');
-                parts.push('    - Project structure provided first for navigation\n');
-                parts.push('    - All file contents are complete and unmodified\n');
-                parts.push('  </data_format>\n');
+                parts.push('<![CDATA[' + CUSTOM_SYSTEM_PROMPT + ']]>\n');
                 parts.push('</system_prompt>\n\n');
                 
                 parts.push('<project_structure><![CDATA[' + struct + ']]></project_structure>\n\n');
@@ -1553,8 +1564,6 @@
                 
                 // Use unified human-readable header for Gemini output
                 parts.push('## 🎯 SYSTEM PROMPT\n');
-                parts.push('> **Role**: Expert Software Engineer and Code Analyst\n\n');
-                parts.push('**📌 Key Instructions:**\n\n');
                 parts.push('1. **Complete Context**: This is the FULL and AUTHORITATIVE codebase\n');
                 parts.push('2. **Analyze Thoroughly**: Understand architecture, patterns, and dependencies\n');
                 parts.push('3. **Maintain Consistency**: Follow existing code style and conventions\n');
@@ -1696,19 +1705,7 @@
             
             parts.push('## 🎯 SYSTEM PROMPT\n');
             parts.push('```\n');
-            parts.push('You are an expert software engineer analyzing a complete codebase.\n\n');
-            parts.push('INSTRUCTIONS:\n');
-            parts.push('- Treat this as the COMPLETE and AUTHORITATIVE source of truth for this project\n');
-            parts.push('- Analyze the code structure, architecture, and design patterns\n');
-            parts.push('- Understand dependencies and relationships between files\n');
-            parts.push('- Maintain consistency with existing code patterns and conventions\n');
-            parts.push('- Always reference specific file paths when discussing code\n');
-            parts.push('- Consider the project holistically before making suggestions\n');
-            parts.push('- Respect the established coding style and naming conventions\n\n');
-            parts.push('DATA FORMAT:\n');
-            parts.push('- Each file is presented with its full path and language\n');
-            parts.push('- Code blocks use appropriate syntax highlighting\n');
-            parts.push('- The project structure is provided first for context\n');
+            parts.push(CUSTOM_SYSTEM_PROMPT + '\n');
             parts.push('```\n\n');
             
             parts.push('## 📁 PROJECT STRUCTURE\n```\n', struct, '```\n\n');
@@ -1735,22 +1732,7 @@
             parts.push('</metadata>\n\n');
             
             parts.push('<system_prompt>\n');
-            parts.push('  <role>Expert Software Engineer</role>\n');
-            parts.push('  <task>Analyze and work with this complete codebase</task>\n');
-            parts.push('  <instructions>\n');
-            parts.push('    - This is the COMPLETE and AUTHORITATIVE codebase\n');
-            parts.push('    - Analyze architecture, patterns, and code organization\n');
-            parts.push('    - Understand file dependencies and relationships\n');
-            parts.push('    - Maintain existing code style and conventions\n');
-            parts.push('    - Reference specific file paths in your responses\n');
-            parts.push('    - Think holistically about the entire project\n');
-            parts.push('    - Respect established patterns and best practices\n');
-            parts.push('  </instructions>\n');
-            parts.push('  <data_format>\n');
-            parts.push('    - Files are in XML format with path and language metadata\n');
-            parts.push('    - Project structure provided first for navigation\n');
-            parts.push('    - All file contents are complete and unmodified\n');
-            parts.push('  </data_format>\n');
+            parts.push('<![CDATA[' + CUSTOM_SYSTEM_PROMPT + ']]>\n');
             parts.push('</system_prompt>\n\n');
             
             parts.push('<project_structure>\n', struct, '</project_structure>\n\n');
@@ -1776,7 +1758,7 @@
             });
             parts.push('\n');
             
-            parts.push('## 🧠 SYSTEM PROMPT & INSTRUCTIONS\n\n');
+                parts.push('## 🎯 SYSTEM PROMPT\n\n');
             parts.push('> **Role**: Expert Software Engineer and Code Analyst\n\n');
             parts.push('**📌 Key Instructions:**\n\n');
             parts.push('1. **Complete Context**: This is the FULL and AUTHORITATIVE codebase\n');
