@@ -1490,9 +1490,9 @@
                 parts.push('<codebase_context>\n\n');
                 
                 parts.push('<metadata>\n');
-                parts.push(`  <generated_at>${timestamp}</generated_at>\n`);
-                parts.push(`  <formatted_date>${formattedDate}</formatted_date>\n`);
-                parts.push(`  <project_root>${S.root}</project_root>\n`);
+                parts.push(`  <generated_at>${xmlEscape(timestamp)}</generated_at>\n`);
+                parts.push(`  <formatted_date>${xmlEscape(formattedDate)}</formatted_date>\n`);
+                parts.push(`  <project_root>${xmlEscape(S.root)}</project_root>\n`);
                 parts.push(`  <statistics>\n`);
                 parts.push(`    <total_files>${totalFiles}</total_files>\n`);
                 parts.push(`    <total_size>${bytes(totalSize)}</total_size>\n`);
@@ -1500,11 +1500,15 @@
                 parts.push(`  </statistics>\n`);
                 parts.push(`  <languages>\n`);
                 Object.entries(langStats).sort((a, b) => b[1] - a[1]).forEach(([lang, count]) => {
-                    parts.push(`    <language name="${lang}" count="${count}" />\n`);
+                    parts.push(`    <language name="${xmlEscape(lang)}" count="${count}" />\n`);
                 });
                 parts.push(`  </languages>\n`);
                 parts.push('</metadata>\n\n');
                 
+                // Human-readable header (XML-safe comment) to mark the system prompt section
+                parts.push('<!-- 🎯 SYSTEM PROMPT -->\n');
+                // Human-readable header (XML-safe comment) to mark the system prompt section
+                parts.push('<!-- 🎯 SYSTEM PROMPT -->\n');
                 parts.push('<system_prompt>\n');
                 parts.push('  <role>Expert Software Engineer</role>\n');
                 parts.push('  <task>Analyze and work with this complete codebase</task>\n');
@@ -1524,7 +1528,7 @@
                 parts.push('  </data_format>\n');
                 parts.push('</system_prompt>\n\n');
                 
-                parts.push('<project_structure>\n', struct, '</project_structure>\n\n');
+                parts.push('<project_structure><![CDATA[' + struct + ']]></project_structure>\n\n');
                 parts.push('<source_files>\n');
             } else if (S.model === 'gemini') {
                 parts.push('# 🚀 COMPLETE PROJECT CONTEXT FOR GEMINI\n');
@@ -1547,7 +1551,8 @@
                 });
                 parts.push('\n');
                 
-                parts.push('## 🧠 SYSTEM PROMPT & INSTRUCTIONS\n\n');
+                // Use unified human-readable header for Gemini output
+                parts.push('## 🎯 SYSTEM PROMPT\n');
                 parts.push('> **Role**: Expert Software Engineer and Code Analyst\n\n');
                 parts.push('**📌 Key Instructions:**\n\n');
                 parts.push('1. **Complete Context**: This is the FULL and AUTHORITATIVE codebase\n');

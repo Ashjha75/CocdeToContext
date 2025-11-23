@@ -4,15 +4,23 @@
     color: #e8e8e8;
     border: 1px solid #444;
     border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 1em;
+    padding: 6px 34px 6px 10px;
+    font-size: 0.95em;
     margin-left: 4px;
     margin-right: 2px;
     outline: none;
-    transition: border 0.15s;
+    transition: border 0.15s, box-shadow 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path fill="%23e8e8e8" d="M0 0 L5 6 L10 0 Z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 6px;
 }
 #modelSelector:focus {
     border-color: #fbbf24;
+    box-shadow: 0 0 0 3px rgba(251,187,36,0.08);
 }
 /* Only sidebar main action icons (Select Directory, Create Context) black and small */
 .sidebar-btn-icon {
