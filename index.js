@@ -947,7 +947,16 @@
             cls: '' // No custom classes needed - icons are already colored
         };
     };
-    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '<').replace(/>/g, '>');
+    // Escape text for HTML/XML contexts
+    const esc = s => String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+
+    // XML-specific escape (alias for clarity)
+    const xmlEscape = esc;
     // ============================================================================
     // CUSTOM MODAL - NO ALERTS
     // ============================================================================
@@ -1571,10 +1580,10 @@
                     parts.push(`### ${full}\n`);
                     parts.push('```', ext, '\n', content, '\n```\n\n');
                 } else if (S.model === 'claude') {
-                    // Claude format: XML-style with clear metadata
-                    parts.push(`<file path="${full}">\n`);
-                    parts.push(`<language>${ext}</language>\n`);
-                    parts.push(`<content>\n${content}\n</content>\n`);
+                    // Claude format: XML-style with proper escaping
+                    parts.push(`<file path="${xmlEscape(full)}">\n`);
+                    parts.push(`<language>${xmlEscape(ext)}</language>\n`);
+                    parts.push(`<content>\n${xmlEscape(content)}\n</content>\n`);
                     parts.push('</file>\n\n');
                 } else if (S.model === 'gemini') {
                     // Gemini format: Structured with clear delimiters
@@ -1584,9 +1593,9 @@
                 }
             });
             
-            // Add closing tags for Claude
+            // Add closing tags for Claude (match opening tag)
             if (S.model === 'claude') {
-                parts.push('</source_files>\n</context>\n');
+                parts.push('</source_files>\n</codebase_context>\n');
             }
 
             let ctx;
@@ -1608,6 +1617,13 @@
 
             S.ctx = ctx;
             S.isArray = false;
+
+            // Debugging: log generated output summary
+            try {
+                console.log('Generated context:', { model: S.model, size: ctx.length, preview: ctx.substring(0, 200) });
+            } catch (e) {
+                console.log('Generated context (unable to preview):', { model: S.model });
+            }
 
             if (isLarge) {
                 const prev = ctx.substring(0, 50000);
@@ -1820,9 +1836,9 @@
                         parts.push(`### ${full}\n`);
                         parts.push('```', ext, '\n', content, '\n```\n\n');
                     } else if (S.model === 'claude') {
-                        parts.push(`<file path="${full}">\n`);
-                        parts.push(`<language>${ext}</language>\n`);
-                        parts.push(`<content>\n${content}\n</content>\n`);
+                        parts.push(`<file path="${xmlEscape(full)}">\n`);
+                        parts.push(`<language>${xmlEscape(ext)}</language>\n`);
+                        parts.push(`<content>\n${xmlEscape(content)}\n</content>\n`);
                         parts.push('</file>\n\n');
                     } else if (S.model === 'gemini') {
                         parts.push(`## File: ${full}\n`);
@@ -1852,9 +1868,9 @@
             }
         }
 
-        // Add closing tags for Claude format
+        // Add closing tags for Claude format (match opening tag)
         if (S.model === 'claude') {
-            parts.push('</source_files>\n</context>\n');
+            parts.push('</source_files>\n</codebase_context>\n');
         }
 
         await new Promise(r => setTimeout(r, 0));
